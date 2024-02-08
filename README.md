@@ -188,3 +188,10 @@ Still up for debate, but probably these:
 - Node
 - PostgreSQL and Prisma
 - Auth0
+
+### Notes from Taz Conversation
+- Twitch Stream
+- Web sockets/web rtc
+- SSG mode
+- Separate server for controls
+- NodeUSB, NodeHSB, - Bluetooth in JS
