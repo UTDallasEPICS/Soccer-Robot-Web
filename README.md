@@ -1,9 +1,9 @@
-# UTDesign EPICS [Next.js](https://nextjs.org) Template Project
+# UTDesign EPICS [Nuxt.js](https://nuxt.com) Template Project
 
 This project is the template used for all EPICS CS projects. The core technologies used are:
 
-- [Next.js](https://nextjs.org): A full stack web development framework
-- [Prisma](https://prisma.io): A database ORM used to connect Next.js to a database
+- [Nuxt.js](https://nuxt.com): A full stack web development framework
+- [Prisma](https://prisma.io): A database ORM used to connect Nuxt.js to a database
 - [PostgreSQL](https://www.postgresql.org): An open source SQL database
 
 <!-- markdownlint-disable-next-line MD033 -->
@@ -23,7 +23,6 @@ This project is the template used for all EPICS CS projects. The core technologi
     - [CSS](#css)
     - [JavaScript](#javascript)
     - [TypeScript](#typescript)
-  - [Learn Next.js](#learn-nextjs)
   - [Learn Prisma](#learn-prisma)
 - [Deploying This Project](#deploying-this-project)
 
@@ -134,17 +133,6 @@ Websites are built using HTML, CSS, and JavaScript. HTML, or Hypertext Markup La
 #### JavaScript
 
 #### TypeScript
-
-### Learn Next.js
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Official Next.js Examples](https://github.com/vercel/next.js/tree/canary/examples)
-- [Official Next.js with Prisma Example](https://github.com/prisma/prisma-examples/tree/latest/typescript/rest-nextjs-api-routes)
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
 ### Learn Prisma
 

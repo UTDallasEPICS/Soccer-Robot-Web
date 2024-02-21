@@ -1,26 +1,17 @@
 {
-  "name": "next-js-template",
-  "version": "0.1.0",
+  "name": "nuxt-app",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@prisma/client": "^5.9.0",
-    "@types/node": "20.6.5",
-    "@types/react": "18.2.22",
-    "@types/react-dom": "18.2.7",
-    "eslint": "8.50.0",
-    "eslint-config-next": "13.5.2",
-    "next": "14.0.3",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "typescript": "5.2.2"
-  },
-  "devDependencies": {
-    "prisma": "^5.9.0"
+    "nuxt": "^3.10.2",
+    "vue": "^3.4.19",
+    "vue-router": "^4.2.5"
   }
 }
