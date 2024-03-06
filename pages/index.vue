@@ -1,22 +1,32 @@
-<template lang="pug">
-div.flex.flex-nowrap
-    div.flex-auto.shrink-0
-        p LogoPlaceholder
-    div.flex.flex-nowrap.shrink-0.space-x-3
-        Button(@click="openLogIn" style="background-color: #154734") {{ "Log In" }}
-        Button(@click="openSignUp" style="background-color: #e87500") {{ "Sign Up" }}
-div.flex.flex-nowrap.justify-evenly.text-white.text-2xl.font-bold(style="background-color: #e87500")
-    div
-        p.cursor-pointer(@click="openAboutUs") About Us
-    div
-        p.cursor-pointer(@click="openHowToPlay") How to Play
-    div
-        p.cursor-pointer(@click="openHelp") Help
-SignUpOverlay(v-if="showSignUp" @closeSignUpOverlay="closeSignUp")
-LogInOverlay(v-if="showLogIn" @closeLogInOverlay="closeLogIn")
-AboutUsOverlay(v-if="showAboutUs" @closeAboutUsOverlay="closeAboutUs")
-HowToPlayOverlay(v-if="showHowToPlay" @closeHowToPlayOverlay="closeHowToPlay")
-HelpOverlay(v-if="showHelp" @closeHelpOverlay="closeHelp")
+<template>
+<div class = "flex flex-nowrap shrink-0 space-x-3">
+    <div id="utdLogo">
+            <img src="/pages/UTDLogo.svg" style="width:53%">
+    </div>
+    <div class="width" style="width:120px; background-color:#154734">
+        <button @click="openLogIn" style="background-color:#154734; color:white"> {{ "Log In" }}</button>
+    </div>
+    <div> 
+        <button @click="openSignUp" style="background-color: #e87500"> {{ "Sign Up" }}</button>
+
+    </div>
+        </div>
+<div class = "flex flex-nowrap justify-evenly text-white text-2x1 font-bold" style = "background-color: #e87500">
+    <div>
+        <p class = cursor-pointer @click="openAboutUs">About Us</p>
+    </div>
+    <div>
+        <p class = cursor-pointer @click="openHowToPlay"> How to Play</p>
+    </div>
+    <div>
+        <p class = cursor-pointer @click="openHelp"> Help </p>
+    </div>
+</div>
+<SignUpOverlay v-if="showSignUp" @closeSignUpOverlay = "closeSignUp"></SignUpOverlay>
+<LogInOverlay v-if="showLogIn" @closeLogInOverlay = "closeLogIn"></LogInOverlay>
+<AboutUsOverlay v-if="showAboutUs" @closeAboutUsOverlay = "closeAboutUs"></AboutUsOverlay>
+<HowToPlayOverlay v-if="showHowToPlay" @closeHowToPlayOverlay = "closeHowToPlay"></HowToPlayOverlay>
+<HelpOverlay v-if="showHelp" @closeHelpOverlay = "closeHelp"></HelpOverlay>
 </template>
 
 <script setup lang="ts">
