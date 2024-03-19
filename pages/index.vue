@@ -1,27 +1,30 @@
 <template>
 <div class = "flex flex-nowrap shrink-0 space-x-3">
-    <div id="utdLogo">
-            <img src="/pages/UTDLogo.svg" style="width:53%">
+    <div class="utdLogo" style="width:450px">
+            <img src="/pages/UTDLogo.svg">
     </div>
-    <div class="width" style="width:120px; background-color:#154734">
-        <button @click="openLogIn" style="background-color:#154734; color:white"> {{ "Log In" }}</button>
-    </div>
-    <div> 
-        <button @click="openSignUp" style="background-color: #e87500"> {{ "Sign Up" }}</button>
-
-    </div>
+    <div class="flex md:flex md:flex-grow flex-row justify-end space-x-3 mr-4 mt-5 mb-2">
+        <div class="">
+            <button class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 rounded-lg" style="background-color:#154734" @click="openLogIn"> {{ "Log In" }}</button>
         </div>
-<div class = "flex flex-nowrap justify-evenly text-white text-2x1 font-bold" style = "background-color: #e87500">
-    <div>
-        <p class = cursor-pointer @click="openAboutUs">About Us</p>
-    </div>
-    <div>
-        <p class = cursor-pointer @click="openHowToPlay"> How to Play</p>
-    </div>
-    <div>
-        <p class = cursor-pointer @click="openHelp"> Help </p>
+        <div class=""> 
+            <button class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 mr-5 rounded-lg" style="background-color:#e87500" @click="openSignUp"> {{ "Sign Up" }}</button>
+        </div>
     </div>
 </div>
+
+<div class = "flex flex-nowrap justify-evenly text-white text-2x1 font-bold py-3" style = "background-color: #e87500">
+    <div>
+        <p class="cursor-pointer hover:text-gray-300 transition font-semibold duration-300 text-white text-xl" @click="openAboutUs">About Us</p>
+    </div>
+    <div>
+        <p class="cursor-pointer hover:text-gray-300 transition font-semibold duration-300 text-white text-xl" @click="openHowToPlay"> How to Play</p>
+    </div>
+    <div>
+        <p class="cursor-pointer hover:text-gray-300 transition font-semibold duration-300 text-white text-xl" @click="openHelp"> Help </p>
+    </div>
+</div>
+
 <SignUpOverlay v-if="showSignUp" @closeSignUpOverlay = "closeSignUp"></SignUpOverlay>
 <LogInOverlay v-if="showLogIn" @closeLogInOverlay = "closeLogIn"></LogInOverlay>
 <AboutUsOverlay v-if="showAboutUs" @closeAboutUsOverlay = "closeAboutUs"></AboutUsOverlay>
