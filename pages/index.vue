@@ -18,7 +18,6 @@ AboutUsOverlay(v-if="showAboutUs" @closeAboutUsOverlay="closeAboutUs")
 HowToPlayOverlay(v-if="showHowToPlay" @closeHowToPlayOverlay="closeHowToPlay")
 HelpOverlay(v-if="showHelp" @closeHelpOverlay="closeHelp")
 <QueueContainer/>
-<Scoreboard/>
 </template>
 
 <script setup lang="ts">
