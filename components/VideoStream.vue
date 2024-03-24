@@ -3,7 +3,8 @@
 </template>
 
 <script setup lang="ts">
-  const src = `https://player.twitch.tv/?channel=${process.env.CHANNELNAME}&parent=${process.env.PARENTNAME}` 
+  const runtime = useRuntimeConfig()
+  const src = `https://player.twitch.tv/?channel=${runtime.CHANNEL_NAME}&parent=${runtime.PARENT_NAME}` 
   const height = 500
   const width = 888
 </script>
