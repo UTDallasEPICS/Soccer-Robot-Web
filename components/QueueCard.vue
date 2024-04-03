@@ -1,8 +1,8 @@
 <template>
 <div class="flex flex-no-wrap place-content-evenly">
-    <p class="basis-0 grow truncate text-center"> {{ user1 }} </p>
-    <p class="w-min"> vs </p>
-    <p class="basis-0 grow truncate text-center"> {{ user2 }} </p>
+    <p class="basis-0 grow truncate text-center" style="font-weight: bold; font-size: 15px; font-family: Inter;"> {{ user1 }} </p>
+    <p class="w-min" style="font-weight: bold; font-size: 15px; font-family: Inter"> vs </p>
+    <p class="basis-0 grow truncate text-center" style="font-weight: bold; font-size: 15px; font-family: Inter;"> {{ user2 }} </p>
 </div>
 </template>
     
@@ -12,3 +12,7 @@ const props = defineProps({
     user2: String
 })
 </script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap')
+</style>
