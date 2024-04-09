@@ -1,7 +1,7 @@
 <template>
-<div class="flex flex-no-wrap place-content-evenly">
+<div class="flex flex-no-wrap place-content-evenly" style = "padding: 1.5%;">
     <p class="basis-0 grow truncate text-center" style="font-weight: bold; font-size: 15px; font-family: Inter;"> {{ user1 }} </p>
-    <p class="w-min" style="font-weight: bold; font-size: 15px; font-family: Inter"> vs </p>
+    <p class="w-min" style="font-weight: bold; font-size: 15px; font-family: Inter"> VS </p>
     <p class="basis-0 grow truncate text-center" style="font-weight: bold; font-size: 15px; font-family: Inter;"> {{ user2 }} </p>
 </div>
 </template>

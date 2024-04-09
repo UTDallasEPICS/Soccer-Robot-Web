@@ -1,10 +1,11 @@
 <template>
     <div class="border-black rounded-lg border-4 overflow-y-auto" style="width: 340px; height: 500px;">
+        <p class="text-center border-b-2 border-black" style="font-weight: bold; font-size: 24px">Queue</p>
         <div v-for="(user, index) in queueUsers" :key="index">
             <QueueCard  v-if="index % 2 == 0" :user1="getTwoUsers(index)[0]" :user2="getTwoUsers(index)[1]" :style="{backgroundColor : changeCardColor(index)}"/>
         </div>
     </div>
-    <button v-bind:style="{backgroundColor : buttonColor}" @click="changeButton();" class = "border-4 rounded-2xl border-black content-center rounded-t-none" style="font-size: 24px; font-weight: bold">
+    <button v-bind:style="{backgroundColor : buttonColor}" @click="changeButton();" class = "border-4 rounded-2xl border-black content-center rounded-t-none" style="font-size: 24px; font-weight: bold; width: 100%;">
         {{ buttonStatus }}
     </button> <!--Button is unclickable due to collision with the container, margin-left:75.85 and margin-top: 37% is perfect fit-->
 </template>
