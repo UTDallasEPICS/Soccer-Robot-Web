@@ -21,7 +21,8 @@ const printCurrentUsers = () => {
 
 // WEBSOCKET RASPBERRY
 // Make sure to set up Raspberry server first
-// const ws_raspberry = new WebSocket(`ws://localhost:{PORT_WSS_RASPBERRY}`)
+const ws_raspberry = new WebSocket(`ws://localhost:${PORT_WSS_RASPBERRY}`)
+console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_WSS_RASPBERRY}`)
 
 // EXPRESS SERVER: GAME_MANAGER -> CONTROLLER
 // THIS IS A PRIVATE PORT
@@ -75,4 +76,48 @@ const wss = new WebSocketServer({ port: PORT_WSS_CLIENT})
 
 wss.on("listening", () => {
     console.log(`WSS_CONTROLLER_CLIENT is running on ws://localhost:${PORT_WSS_CLIENT}`)
+})
+
+wss.on("error", (error) => {
+    console.log("WebSocket server error: " + error)
+})
+
+wss.on("close", () => {
+    console.log("WebSocket server closed")
+})
+
+wss.on("connection", (ws: any, request) => {
+    console.log("WSS_CONTROLLER_CLIENT: New connection!")
+    // Username and accesspassword passed through query parameters
+    const url = request.url ? new URL(request.url, `http://${request.headers.host}`) : null
+    const username = url?.searchParams.get("username") ?? ""
+    const accesspassword = url?.searchParams.get("accesspassword") ?? ""
+    // Reject ws connection if accesspassword is wrong or username is not in allowedUsers
+    if(!(accesspassword && accesspassword === CONTROLLER_ACCESS && username && allowedUsers.findIndex((element) => { return element["username"] === username}) != -1)){
+        ws.close()
+        console.log(`WSS_CONTROLLER_CLIENT: REJECTED ${username}`)
+    }
+    else{
+        const index = allowedUsers.findIndex((element) => { return element["username"] === username})
+        const playernumber = allowedUsers[index]["playernumber"]
+        ws.on("message", (data: any) => {
+            const { type, payload } = JSON.parse(data)
+            
+            if(type === "KEY_INPUT"){
+                if(payload === "w" || payload === "a" || payload === "s" || payload === "d"){
+                    console.log(`PLAYER ${playernumber}: ${username} | ${type} : ${payload}`)
+                    // Forward KEY_INPUT to Raspberry server
+                    ws_raspberry.send(JSON.stringify({
+                        "type": "KEY_INPUT",
+                        "payload": {
+                            "key": payload,
+                            "playernumber": playernumber
+                        }
+                    }))
+                }
+            }
+        })
+        allowedUsers[index]["ws"] = ws
+        ws.send("CONNECTED")
+    }
 })
