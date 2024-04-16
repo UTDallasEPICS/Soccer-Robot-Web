@@ -4,7 +4,7 @@ div.fixed.w-full.h-full.inset-0.bg-black.bg-opacity-80.flex(style="z-index: 2")
         div.w-min.h-min.text-black(style="margin-left: auto;")
             p.cursor-pointer(@click="emitClose") X
         p.w-full.text-center About Us
-        p Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia numquam atque sed dolorem laudantium minus ullam totam voluptatem hic doloremque aut temporibus impedit distinctio architecto eveniet quos sit ducimus, veniam tenetur qui consequuntur accusamus dolore consectetur. Atque mollitia quaerat deleniti rerum aliquid suscipit nulla facere quia pariatur at autem dolorem officia eius rem ea delectus non veniam facilis hic, doloribus, nisi dolor dicta illo iure. Dolorum ut expedita recusandae distinctio commodi nam accusantium. Accusamus eius repellendus distinctio at dolore ducimus? Natus, at vel? Quaerat, at, nemo repudiandae labore itaque dolorem provident sequi voluptatum nostrum quasi facere cum asperiores deleniti quisquam?
+        p Team Shawarama along with RL^2 presents to you: Soccer Robots! These fun, interactive robots allow you to play soccer from the comforts of your own phone. Using the WASD keys on your keyboard, you can move your robot to the World Cup! 
 </template>
 
 <script setup lang="ts">
