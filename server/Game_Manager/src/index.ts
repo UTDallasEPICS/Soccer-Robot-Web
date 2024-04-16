@@ -6,12 +6,100 @@ import { WebSocket, WebSocketServer } from "ws"
 dotenv.config({ path: "./.env" })
 const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
 const PORT_GM_RASPBERRY = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
+const PORT_CLIENT_GM = parseInt(`${process.env.PORT_CLIENT_GM}`)
+let CONFIRMATION_PASSWORD: string = process.env.CONFIRMATION_PASSWORD ?? ""
 
 // SHARED VARIABLES
 const queue: Array<{username: string, ws: any}> = []
+const players: Array<{username: string, ws: any, accepted: boolean}> = []
 let timer: number = 0
 let score1: number = 0
 let score2: number = 0
+
+// WEBSOCKET LOGGED IN CLIENT <-> GAME MANAGER
+const wss_client_gm = new WebSocketServer({ port: PORT_CLIENT_GM })
+
+wss_client_gm.on("listening", () => {
+    console.log(`wss_CLIENT_GM is running on ws://localhost:${PORT_CLIENT_GM}`)
+})
+
+// Temporary database of users
+const allowedUsers: Array<string> = ["craz", "jojo", "koro", "frieren"]
+
+wss_client_gm.on("connection", (ws: any, request) => {
+    console.log("New connection!")
+
+    // Get username from query parameters for now
+    const url = request.url ? new URL(request.url, `http://${request.headers.host}`) : null; 
+    const username = url?.searchParams.get("username") ?? ""
+
+    // Authenticate/Authorization should be done here
+    if (((username && allowedUsers.includes(username)) == false) 
+        || (username && players.length > 0 && players[0]["username"] === username)
+        || (username && players.length > 1 && players[1]["username"] === username)) {
+        console.log("REJECTED: " + username)
+        ws.close()
+    }
+    else{
+        // kick user if ws connection is lost or closed
+        ws.onclose = (event: any) => {
+            const index = queue.findIndex((element) => { return element["username"] === username })
+            if(index != -1){
+                console.log("REMOVING " + queue[index]["username"])
+                queue.splice(index, 1)
+            }
+        }
+        ws.on("message", (data: any) => {
+            const { type, payload } = JSON.parse(data)
+            console.log(`Received message => ${type} : ${payload}`)
+    
+            if(type === "JOIN_QUEUE"){ // should already be in
+                const index = queue.findIndex((element) => { return element.username === username })
+                // do not let in if user is in game
+                const player_index = players.findIndex((element) => { return element.username === username })
+                if(index == -1 && player_index == -1){
+                    console.log("ADDING " + username)
+                    queue.push({"username": username, "ws": ws})
+                }
+            }
+            else if(type === "LEAVE_QUEUE"){
+                const index = queue.findIndex((element) => { return element["username"] === username })
+                if(index != -1){
+                    console.log("REMOVING " + queue[index]["username"])
+                    queue.splice(index, 1)
+                }
+                ws.close()
+            }
+            else if(type === "CONFIRMATION"){
+                const { password, accepted } : { password: string, accepted: boolean } = payload
+                if(password === CONFIRMATION_PASSWORD){
+                    if(true){ // TODO 
+                    // if(game_state === GAME_STATE.SEND_CONFIRM){
+                        const player_index = players.findIndex((element) => { return element.username === username })
+                        // make sure players do not accept/decline multiple times
+                        if(player_index == -1){
+                            // make sure users are the next 2 in queue
+                            if(queue[0]["username"] === username || queue[1]["username"] === username){
+                                players.push({"username": username, "ws": ws, "accepted": accepted})
+                                console.log(`Player ${username} has ${accepted ? "accepted" : "declined"}`)
+                            }
+                        }
+                    }
+                                              
+                }
+            }
+        })
+        ws.send("CONNECTED")
+    }
+})
+
+wss_client_gm.on("error", (error) => {
+    console.log("WSS_CLIENT_GM error: " + error)
+})
+
+wss_client_gm.on("close", () => {
+    console.log("WSS_CLIENT_GM closed")
+})
 
 // SERVER SENT EVENTS
 const app_sse = express()
