@@ -1,9 +1,11 @@
 import express from "express"
 import dotenv from "dotenv"
+import { WebSocket, WebSocketServer } from "ws"
 
 // Environment variables
 dotenv.config({ path: "./.env" })
 const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
+const PORT_GM_RASPBERRY = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
 
 // SHARED VARIABLES
 const queue: Array<{username: string, ws: any}> = []
@@ -71,3 +73,30 @@ const broadcastScore = setInterval(() => {
         client["response"].write("data: " + score_update +"\n\n")
     })
 }, 1000)
+
+// WEBSOCKET GAME MANAGER <-> RASPBERRY
+// Make sure to set up Raspberry server first
+const ws_raspberry = new WebSocket(`ws://localhost:${PORT_GM_RASPBERRY}`)
+
+ws_raspberry.onopen = (event) => {
+    console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_GM_RASPBERRY}`)
+}
+
+ws_raspberry.onerror = (error) => {
+    console.log("WS_RASPBERRY error: " + error)
+}
+ws_raspberry.onclose = (event) => {
+    console.log("WS_RASPBERRY closed")
+}
+
+ws_raspberry.onmessage = (event) => {
+    const { type, payload } = JSON.parse(event.data.toString())
+    console.log(`Received message => ${type} : ${payload}`)
+    if(type === "TIMER") {
+        timer = payload
+    }
+    else if(type === "SCORE"){
+        score1 = payload["score1"]
+        score2 = payload["score2"]
+    }
+}
