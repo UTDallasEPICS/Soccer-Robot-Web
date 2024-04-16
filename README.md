@@ -1,4 +1,4 @@
-# Soccer Robots CS (UTDesign EPICS
+# Soccer Robots CS (UTDesign EPICS)
 
 <!-- markdownlint-disable-next-line MD033 -->
 <details><summary><h2>Table of Contents</h2></summary>
