@@ -3,7 +3,7 @@ import { WebSocket, WebSocketServer } from "ws"
 import dotenv from "dotenv"
 
 // Environment variables
-dotenv.config({ path: "../../.env" })
+dotenv.config({ path: "./.env" })
 const PORT_SERVER: number = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
 const PORT_WSS_CLIENT: number = parseInt(`${process.env.PORT_WSS_CONTROLLER_CLIENT}`)
 const PORT_WSS_RASPBERRY: number = parseInt(`${process.env.PORT_WSS_CONTROLLER_RASPBERRY}`)
