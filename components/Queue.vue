@@ -19,7 +19,6 @@ let cardColor = "#D9D9D9";
 
 const changeCardColor = (index:number) => {
     index = index/2
-    console.log(index);
     let cardCounter = index;
     if(cardCounter % 2 === 0)
     {
@@ -46,6 +45,11 @@ const addUser = () => {
     counter.value++
 }
 
+const removeUser = () => {
+    queueUsers.value.pop();
+    counter.value--;
+}
+
 const changeButton = () => {
     if(buttonColor.value == '#5FE0B7')
     {
@@ -55,6 +59,7 @@ const changeButton = () => {
     }
     else
     {
+        removeUser();
         buttonColor.value = '#5FE0B7'
         buttonStatus.value = 'Join Queue';
     }
