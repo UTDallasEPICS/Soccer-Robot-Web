@@ -24,7 +24,7 @@ const printCurrentUsers = () => {
 const ws_raspberry = new WebSocket(`ws://localhost:${PORT_WSS_RASPBERRY}`)
 console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_WSS_RASPBERRY}`)
 
-// EXPRESS SERVER: GAME_MANAGER -> CONTROLLER
+// SECTION: EXPRESS SERVER: GAME_MANAGER -> CONTROLLER
 // THIS IS A PRIVATE PORT
 const app = express()
 app.use(express.json())
@@ -71,7 +71,7 @@ app.post("/removeuser", (request, response) => {
     response.status(status).end()
 })
 
-// WEBSOCKET SERVER: CLIENT -> CONTROLLER
+// SECTION: WEBSOCKET SERVER: CLIENT -> CONTROLLER
 const wss = new WebSocketServer({ port: PORT_WSS_CLIENT})
 
 wss.on("listening", () => {
