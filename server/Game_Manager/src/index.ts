@@ -21,7 +21,7 @@ let score2: number = 0
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
 
-// GAME CYCLES
+// SECTION: GAME CYCLES
 const gameCycle = setInterval(() => {
     if(game_state == GAME_STATE.NOT_PLAYING){
         // Check for sufficient users in queue to send confirmation request
@@ -133,7 +133,7 @@ const gameCycle = setInterval(() => {
     }
 }, 1000)
 
-// WEBSOCKET LOGGED IN CLIENT <-> GAME MANAGER
+// SECTION: WEBSOCKET LOGGED IN CLIENT <-> GAME MANAGER
 const wss_client_gm = new WebSocketServer({ port: PORT_CLIENT_GM })
 
 wss_client_gm.on("listening", () => {
@@ -218,7 +218,7 @@ wss_client_gm.on("close", () => {
     console.log("WSS_CLIENT_GM closed")
 })
 
-// SERVER SENT EVENTS
+// SECTION: SERVER SENT EVENTS
 const app_sse = express()
 
 const sse_clients: Array<any> = []
@@ -279,7 +279,7 @@ const broadcastScore = setInterval(() => {
     })
 }, 1000)
 
-// WEBSOCKET GAME MANAGER <-> RASPBERRY
+// SECTION: WEBSOCKET GAME MANAGER <-> RASPBERRY
 // Make sure to set up Raspberry server first
 const ws_raspberry = new WebSocket(`ws://localhost:${PORT_GM_RASPBERRY}`)
 
