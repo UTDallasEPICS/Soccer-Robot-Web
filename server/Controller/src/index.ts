@@ -1,5 +1,8 @@
 import express from "express"
 import { WebSocket, WebSocketServer } from "ws"
+import { createServer, IncomingMessage } from "http"
+import jwt from "jsonwebtoken"
+import fs from "fs"
 import dotenv from "dotenv"
 
 // Environment variables
@@ -73,11 +76,8 @@ app.post("/removeuser", (request, response) => {
 })
 
 // SECTION: WEBSOCKET SERVER: CLIENT -> CONTROLLER
-const wss = new WebSocketServer({ port: PORT_WSS_CLIENT})
-
-wss.on("listening", () => {
-    console.log(`WSS_CONTROLLER_CLIENT is running on ws://localhost:${PORT_WSS_CLIENT}`)
-})
+const server = createServer()
+const wss = new WebSocketServer({ noServer: true })
 
 wss.on("error", (error) => {
     console.log("WebSocket server error: " + error)
@@ -87,38 +87,81 @@ wss.on("close", () => {
     console.log("WebSocket server closed")
 })
 
-wss.on("connection", (ws: any, request) => {
+wss.on("connection", (ws: any, request: IncomingMessage, user_id: string) => {
     console.log("WSS_CONTROLLER_CLIENT: New connection!")
-    // Username and accesspassword passed through query parameters
-    const url = request.url ? new URL(request.url, `http://${request.headers.host}`) : null
-    const username = url?.searchParams.get("username") ?? ""
-    const accesspassword = url?.searchParams.get("accesspassword") ?? ""
-    // Reject ws connection if accesspassword is wrong or username is not in allowedUsers
-    if(!(accesspassword && accesspassword === CONTROLLER_ACCESS && username && allowedUsers.findIndex((element) => { return element["username"] === username}) != -1)){
-        ws.close()
-        console.log(`WSS_CONTROLLER_CLIENT: REJECTED ${username}`)
-    }
-    else{
-        const index = allowedUsers.findIndex((element) => { return element["username"] === username})
-        const playernumber = allowedUsers[index]["playernumber"]
-        ws.on("message", (data: any) => {
-            const { type, payload } = JSON.parse(data)
-            
-            if(type === "KEY_INPUT"){
-                if(payload === "w" || payload === "a" || payload === "s" || payload === "d"){
-                    console.log(`PLAYER ${playernumber}: ${username} | ${type} : ${payload}`)
-                    // Forward KEY_INPUT to Raspberry server
-                    ws_raspberry.send(JSON.stringify({
-                        "type": "KEY_INPUT",
-                        "payload": {
-                            "key": payload,
-                            "playernumber": playernumber
-                        }
-                    }))
-                }
+
+    const index = allowedUsers.findIndex((element) => { return element["user_id"] === user_id})
+    const playernumber = allowedUsers[index]["playernumber"]
+
+    ws.on("message", (data: any) => {
+        const { type, payload } = JSON.parse(data)
+        
+        if(type === "KEY_INPUT"){
+            if(payload === "w" || payload === "a" || payload === "s" || payload === "d"){
+                console.log(`PLAYER ${playernumber}: ${user_id} | ${type} : ${payload}`)
+                // Forward KEY_INPUT to Raspberry server
+                ws_raspberry.send(JSON.stringify({
+                    "type": "KEY_INPUT",
+                    "payload": {
+                        "key": payload,
+                        "playernumber": playernumber
+                    }
+                }))
             }
-        })
-        allowedUsers[index]["ws"] = ws
-        ws.send("CONNECTED")
+        }
+    })
+    allowedUsers[index]["ws"] = ws
+    ws.send("CONNECTED")
+})
+
+// check for upgrade request to websocket from a logged in user
+server.on("upgrade", async (request, socket, head) => {
+    // Get cookies
+    const cookies = request.headers["cookie"] ?? ""
+    if(cookies === ""){ // if no cookies, close connection
+        socket.destroy()
+        return
     }
+    const cookiepairs = cookies.split(";");
+    const cookiesplittedPairs = cookiepairs.map(cookie => cookie.split("="));
+    const cookieObj: { [key: string]: string } = {}
+    cookiesplittedPairs.forEach((pair) => {
+        // set each cookie value in the cookieObj
+        cookieObj[decodeURIComponent(pair[0].trim())] = decodeURIComponent(pair[1].trim())
+    })
+
+    if(!(cookieObj["srtoken"] && cookieObj["accesspassword"])){ // if no srtoken cookie or accesspassword cookie, close connection
+        socket.destroy()
+        return
+    }
+
+    if(cookieObj["accesspassword"] !== CONTROLLER_ACCESS){ // if accesspassword is invalid, close connection
+        socket.destroy()
+        return
+    }
+
+    // Authenticate using jwt from cookie srtoken
+    const srtoken = cookieObj["srtoken"]
+    const claims: any = jwt.verify(srtoken, fs.readFileSync(process.cwd()+"/cert-dev.pem"), (error, decoded) => {
+        if(error){ 
+            socket.destroy()
+            return
+        }
+        return decoded
+    })
+
+    if(!(claims instanceof Object && claims["sub"])){ // if jwt is invalid, close connection
+        socket.destroy()
+        return
+    }
+    const user_id: string = claims["sub"]
+    
+    // valid logged in user, upgrade connection to websocket
+    wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit("connection", ws, request, user_id)
+    })
+})
+
+server.listen(PORT_WSS_CLIENT, () => {
+    console.log(`SERVER is running on http://localhost:${PORT_WSS_CLIENT}`)
 })
