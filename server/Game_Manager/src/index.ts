@@ -1,11 +1,12 @@
 import express from "express"
 import dotenv from "dotenv"
 import { WebSocket, WebSocketServer } from "ws"
-import { createServer } from "http"
+import { createServer, IncomingMessage } from "http"
 // import { createServer } from "https"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 import { PrismaClient } from "@prisma/client"
+import { nanoid } from "nanoid"
 
 const prisma = new PrismaClient()
 
@@ -15,7 +16,6 @@ const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
 const PORT_GM_RASPBERRY = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
 const PORT_CLIENT_GM = parseInt(`${process.env.PORT_CLIENT_GM}`)
 const PORT_EXPRESS_CONTROLLER_GAMEMANAGER = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
-// TODO: RANDOMIZE THESE PASSWORDS EVERY REQUEST ITERATION
 let CONFIRMATION_PASSWORD: string = process.env.CONFIRMATION_PASSWORD ?? ""
 let CONTROLLER_ACCESS: string = process.env.CONTROLLER_ACCESS ?? ""
 
@@ -34,6 +34,7 @@ const gameCycle = setInterval(() => {
         // Check for sufficient users in queue to send confirmation request
         if(queue.length >= 2){
             game_state = GAME_STATE.SEND_CONFIRM
+            CONFIRMATION_PASSWORD = nanoid() // new password for each confirmation attempt
             queue[0].ws.send(JSON.stringify({
                 "type": "MATCH_CONFIRMATION",
                 "payload": CONFIRMATION_PASSWORD
@@ -51,39 +52,49 @@ const gameCycle = setInterval(() => {
             // 2 accepts -> start game
             if(players[0]["accepted"] && players[1]["accepted"]){
                 game_state = GAME_STATE.PLAYING
-                console.log(players[0]["username"] + " vs " + players[1]["username"])
-                
-                // authorize players in Controller server to send key inputs
-                fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
+                CONTROLLER_ACCESS = nanoid() // new access code for each game
+                // tell Controller server to change access code
+                fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
-                        "playernumber": 0,
-                        "username": players[0]["username"]
+                        "accesspassword": CONTROLLER_ACCESS
                     })
                 }).then(() => {
+                    console.log(players[0]["username"] + " vs " + players[1]["username"])
+                    
+                    // authorize players in Controller server to send key inputs
                     fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify({
-                            "playernumber": 1,
-                            "username": players[1]["username"]
+                            "playernumber": 0,
+                            "username": players[0]["username"]
                         })
-                    }).then(() => { // give players the access code to connect to Controller server WebSocket
-                        queue[0].ws.send(JSON.stringify({
-                            "type": "MATCH_START",
-                            "payload": CONTROLLER_ACCESS
-                        }))
-                        queue[1].ws.send(JSON.stringify({
-                            "type": "MATCH_START",
-                            "payload": CONTROLLER_ACCESS
-                        }))
-                        // close ws because players are not in queue anymore
-                        queue[0]["ws"].close()
-                        queue[1]["ws"].close()
-                        queue.splice(0, 2)
-                        timer = 60
-                        // yay
+                    }).then(() => {
+                        fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify({
+                                "playernumber": 1,
+                                "username": players[1]["username"]
+                            })
+                        }).then(() => { // give players the access code to connect to Controller server WebSocket
+                            queue[0].ws.send(JSON.stringify({
+                                "type": "MATCH_START",
+                                "payload": CONTROLLER_ACCESS
+                            }))
+                            queue[1].ws.send(JSON.stringify({
+                                "type": "MATCH_START",
+                                "payload": CONTROLLER_ACCESS
+                            }))
+                            // close ws because players are not in queue anymore
+                            queue[0]["ws"].close()
+                            queue[1]["ws"].close()
+                            queue.splice(0, 2)
+                            timer = 60
+                            // yay
+                        })
                     })
                 })
             }
@@ -144,59 +155,56 @@ const gameCycle = setInterval(() => {
 const server_wss_CLIENT_GM = createServer()
 const wss_client_gm = new WebSocketServer({ noServer: true })
 
-wss_client_gm.on("connection", (ws: any, request) => {
+wss_client_gm.on("connection", (ws: any, request: IncomingMessage, username: string) => {
     console.log("New connection!")
+
+    // kick user if ws connection is lost or closed
+    ws.onclose = (event: any) => {
+        const index = queue.findIndex((element) => { return element["username"] === username })
+        if(index != -1){
+            console.log("REMOVING " + queue[index]["username"])
+            queue.splice(index, 1)
+        }
+    }
+    ws.on("message", (data: any) => {
+        const { type, payload } = JSON.parse(data)
+        console.log(`Received message => ${type} : ${payload}`)
+
+        if(type === "JOIN_QUEUE"){ // should already be in
+            const index = queue.findIndex((element) => { return element.username === username })
+            // do not let in if user is in game
+            const player_index = players.findIndex((element) => { return element.username === username })
+            if(index == -1 && player_index == -1){
+                console.log("ADDING " + username)
+                queue.push({"username": username, "ws": ws})
+            }
+        }
+        else if(type === "LEAVE_QUEUE"){
+            const index = queue.findIndex((element) => { return element["username"] === username })
+            if(index != -1){
+                console.log("REMOVING " + queue[index]["username"])
+                queue.splice(index, 1)
+            }
+            ws.close()
+        }
+        else if(type === "CONFIRMATION"){
+            const { password, accepted } : { password: string, accepted: boolean } = payload
+            if(password === CONFIRMATION_PASSWORD){
+                if(game_state === GAME_STATE.SEND_CONFIRM){
+                    const player_index = players.findIndex((element) => { return element.username === username })
+                    // make sure players do not accept/decline multiple times
+                    if(player_index == -1){
+                        // make sure users are the next 2 in queue
+                        if(queue[0]["username"] === username || queue[1]["username"] === username){
+                            players.push({"username": username, "ws": ws, "accepted": accepted})
+                            console.log(`Player ${username} has ${accepted ? "accepted" : "declined"}`)
+                        }
+                    }
+                }
+            }
+        }
+    })
     ws.send("CONNECTED")
-
-    // // kick user if ws connection is lost or closed
-    // ws.onclose = (event: any) => {
-    //     const index = queue.findIndex((element) => { return element["username"] === username })
-    //     if(index != -1){
-    //         console.log("REMOVING " + queue[index]["username"])
-    //         queue.splice(index, 1)
-    //     }
-    // }
-    // ws.on("message", (data: any) => {
-    //     const { type, payload } = JSON.parse(data)
-    //     console.log(`Received message => ${type} : ${payload}`)
-
-    //     if(type === "JOIN_QUEUE"){ // should already be in
-    //         const index = queue.findIndex((element) => { return element.username === username })
-    //         // do not let in if user is in game
-    //         const player_index = players.findIndex((element) => { return element.username === username })
-    //         if(index == -1 && player_index == -1){
-    //             console.log("ADDING " + username)
-    //             queue.push({"username": username, "ws": ws})
-    //         }
-    //     }
-    //     else if(type === "LEAVE_QUEUE"){
-    //         const index = queue.findIndex((element) => { return element["username"] === username })
-    //         if(index != -1){
-    //             console.log("REMOVING " + queue[index]["username"])
-    //             queue.splice(index, 1)
-    //         }
-    //         ws.close()
-    //     }
-    //     else if(type === "CONFIRMATION"){
-    //         const { password, accepted } : { password: string, accepted: boolean } = payload
-    //         if(password === CONFIRMATION_PASSWORD){
-    //             if(true){ // TODO 
-    //             // if(game_state === GAME_STATE.SEND_CONFIRM){
-    //                 const player_index = players.findIndex((element) => { return element.username === username })
-    //                 // make sure players do not accept/decline multiple times
-    //                 if(player_index == -1){
-    //                     // make sure users are the next 2 in queue
-    //                     if(queue[0]["username"] === username || queue[1]["username"] === username){
-    //                         players.push({"username": username, "ws": ws, "accepted": accepted})
-    //                         console.log(`Player ${username} has ${accepted ? "accepted" : "declined"}`)
-    //                     }
-    //                 }
-    //             }
-                                            
-    //         }
-    //     }
-    // })
-    // ws.send("CONNECTED")
 })
 
 wss_client_gm.on("error", (error) => {
@@ -239,7 +247,6 @@ server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
     })
 
     if(!(claims instanceof Object && claims["sub"])){ // if jwt is invalid, close connection
-        console.log("no claims[sub]")
         socket.destroy()
         return
     }
@@ -256,7 +263,8 @@ server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
 
     // valid logged in user, upgrade connection to websocket
     wss_client_gm.handleUpgrade(request, socket, head, (ws) => {
-        wss_client_gm.emit("connection", ws, request)
+        queue.push({"username": find_user.username, "ws": ws})
+        wss_client_gm.emit("connection", ws, request, find_user.username)
     })
 })
 
