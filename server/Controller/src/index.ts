@@ -11,7 +11,7 @@ let CONTROLLER_ACCESS: string = process.env.CONTROLLER_ACCESS ?? ""
 
 // Temporary queue until Auth0+database is set up
 // ws to close connection on POST /removeuser
-const allowedUsers: Array<{"username": string, "playernumber": number, "ws": any}> = []
+const allowedUsers: Array<{"username": string, "user_id": string, "playernumber": number, "ws": any}> = []
 
 const printCurrentUsers = () => {
     let output = ""
@@ -41,12 +41,13 @@ app.post("/accesspassword", (request, response) => {
 
 app.post("/adduser", (request, response) => {
     const username: string = request.body.username
+    const user_id: string = request.body.user_id
     const playernumber: number = request.body.playernumber
     let status = 400
     // If allowedUsers.lenth < 2 and user is not in allowedUsers
     if(allowedUsers.length < 2 && allowedUsers.findIndex((element) => {return element["username"] === username}) == -1){
         // ws is set after the player connects through WebSocket
-        allowedUsers.push({"username": username, "playernumber": playernumber, "ws": null})
+        allowedUsers.push({"username": username, "user_id": user_id, "playernumber": playernumber, "ws": null})
         response.send(`ADDED PLAYER ${playernumber} as ${username}`)
         console.log(`ADDED PLAYER ${playernumber} as ${username} | ALLOWED_USERS: ${printCurrentUsers()}`)
         status = 200
