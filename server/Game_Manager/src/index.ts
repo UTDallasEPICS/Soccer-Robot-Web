@@ -7,6 +7,8 @@ import jwt from "jsonwebtoken"
 import fs from "fs"
 import { PrismaClient } from "@prisma/client"
 
+const prisma = new PrismaClient()
+
 // Environment variables
 dotenv.config({ path: "./.env" })
 const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
@@ -207,7 +209,6 @@ wss_client_gm.on("close", () => {
 
 // check for upgrade request to websocket from a logged in user
 server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
-    console.log(request.headers)
     // Get cookies
     const cookies = request.headers["cookie"] ?? ""
     if(cookies === ""){ // if no cookies, close connection
@@ -221,7 +222,6 @@ server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
         // set each cookie value in the cookieObj
         cookieObj[decodeURIComponent(pair[0].trim())] = decodeURIComponent(pair[1].trim())
     })
-    console.log(cookieObj)
 
     if(!cookieObj["srtoken"]){ // if no srtoken cookie, close connection
         socket.destroy()
@@ -229,8 +229,32 @@ server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
     }
 
     // Authenticate using jwt from cookie srtoken
-    
+    const srtoken = cookieObj["srtoken"]
+    const claims: any = jwt.verify(srtoken, fs.readFileSync(process.cwd()+"/cert-dev.pem"), (error, decoded) => {
+        if(error){ 
+            socket.destroy()
+            return
+        }
+        return decoded
+    })
 
+    if(!(claims instanceof Object && claims["sub"])){ // if jwt is invalid, close connection
+        console.log("no claims[sub]")
+        socket.destroy()
+        return
+    }
+    const user_id: string = claims["sub"]
+    const find_user = await prisma.player.findUnique({
+        where: {
+            user_id: user_id
+        }
+    })
+    if(!find_user){ // if user is not in database, close connection
+        socket.destroy()
+        return
+    }
+
+    // valid logged in user, upgrade connection to websocket
     wss_client_gm.handleUpgrade(request, socket, head, (ws) => {
         wss_client_gm.emit("connection", ws, request)
     })
