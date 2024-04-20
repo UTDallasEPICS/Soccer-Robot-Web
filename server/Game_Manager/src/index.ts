@@ -1,6 +1,11 @@
 import express from "express"
 import dotenv from "dotenv"
 import { WebSocket, WebSocketServer } from "ws"
+import { createServer } from "http"
+// import { createServer } from "https"
+import jwt from "jsonwebtoken"
+import fs from "fs"
+import { PrismaClient } from "@prisma/client"
 
 // Environment variables
 dotenv.config({ path: "./.env" })
@@ -134,80 +139,62 @@ const gameCycle = setInterval(() => {
 }, 1000)
 
 // SECTION: WEBSOCKET LOGGED IN CLIENT <-> GAME MANAGER
-const wss_client_gm = new WebSocketServer({ port: PORT_CLIENT_GM })
-
-wss_client_gm.on("listening", () => {
-    console.log(`wss_CLIENT_GM is running on ws://localhost:${PORT_CLIENT_GM}`)
-})
-
-// Temporary database of users
-const allowedUsers: Array<string> = ["craz", "jojo", "koro", "frieren"]
+const server_wss_CLIENT_GM = createServer()
+const wss_client_gm = new WebSocketServer({ noServer: true })
 
 wss_client_gm.on("connection", (ws: any, request) => {
     console.log("New connection!")
+    ws.send("CONNECTED")
 
-    // Get username from query parameters for now
-    const url = request.url ? new URL(request.url, `http://${request.headers.host}`) : null; 
-    const username = url?.searchParams.get("username") ?? ""
+    // // kick user if ws connection is lost or closed
+    // ws.onclose = (event: any) => {
+    //     const index = queue.findIndex((element) => { return element["username"] === username })
+    //     if(index != -1){
+    //         console.log("REMOVING " + queue[index]["username"])
+    //         queue.splice(index, 1)
+    //     }
+    // }
+    // ws.on("message", (data: any) => {
+    //     const { type, payload } = JSON.parse(data)
+    //     console.log(`Received message => ${type} : ${payload}`)
 
-    // Authenticate/Authorization should be done here
-    if (((username && allowedUsers.includes(username)) == false) 
-        || (username && players.length > 0 && players[0]["username"] === username)
-        || (username && players.length > 1 && players[1]["username"] === username)) {
-        console.log("REJECTED: " + username)
-        ws.close()
-    }
-    else{
-        // kick user if ws connection is lost or closed
-        ws.onclose = (event: any) => {
-            const index = queue.findIndex((element) => { return element["username"] === username })
-            if(index != -1){
-                console.log("REMOVING " + queue[index]["username"])
-                queue.splice(index, 1)
-            }
-        }
-        ws.on("message", (data: any) => {
-            const { type, payload } = JSON.parse(data)
-            console.log(`Received message => ${type} : ${payload}`)
-    
-            if(type === "JOIN_QUEUE"){ // should already be in
-                const index = queue.findIndex((element) => { return element.username === username })
-                // do not let in if user is in game
-                const player_index = players.findIndex((element) => { return element.username === username })
-                if(index == -1 && player_index == -1){
-                    console.log("ADDING " + username)
-                    queue.push({"username": username, "ws": ws})
-                }
-            }
-            else if(type === "LEAVE_QUEUE"){
-                const index = queue.findIndex((element) => { return element["username"] === username })
-                if(index != -1){
-                    console.log("REMOVING " + queue[index]["username"])
-                    queue.splice(index, 1)
-                }
-                ws.close()
-            }
-            else if(type === "CONFIRMATION"){
-                const { password, accepted } : { password: string, accepted: boolean } = payload
-                if(password === CONFIRMATION_PASSWORD){
-                    if(true){ // TODO 
-                    // if(game_state === GAME_STATE.SEND_CONFIRM){
-                        const player_index = players.findIndex((element) => { return element.username === username })
-                        // make sure players do not accept/decline multiple times
-                        if(player_index == -1){
-                            // make sure users are the next 2 in queue
-                            if(queue[0]["username"] === username || queue[1]["username"] === username){
-                                players.push({"username": username, "ws": ws, "accepted": accepted})
-                                console.log(`Player ${username} has ${accepted ? "accepted" : "declined"}`)
-                            }
-                        }
-                    }
-                                              
-                }
-            }
-        })
-        ws.send("CONNECTED")
-    }
+    //     if(type === "JOIN_QUEUE"){ // should already be in
+    //         const index = queue.findIndex((element) => { return element.username === username })
+    //         // do not let in if user is in game
+    //         const player_index = players.findIndex((element) => { return element.username === username })
+    //         if(index == -1 && player_index == -1){
+    //             console.log("ADDING " + username)
+    //             queue.push({"username": username, "ws": ws})
+    //         }
+    //     }
+    //     else if(type === "LEAVE_QUEUE"){
+    //         const index = queue.findIndex((element) => { return element["username"] === username })
+    //         if(index != -1){
+    //             console.log("REMOVING " + queue[index]["username"])
+    //             queue.splice(index, 1)
+    //         }
+    //         ws.close()
+    //     }
+    //     else if(type === "CONFIRMATION"){
+    //         const { password, accepted } : { password: string, accepted: boolean } = payload
+    //         if(password === CONFIRMATION_PASSWORD){
+    //             if(true){ // TODO 
+    //             // if(game_state === GAME_STATE.SEND_CONFIRM){
+    //                 const player_index = players.findIndex((element) => { return element.username === username })
+    //                 // make sure players do not accept/decline multiple times
+    //                 if(player_index == -1){
+    //                     // make sure users are the next 2 in queue
+    //                     if(queue[0]["username"] === username || queue[1]["username"] === username){
+    //                         players.push({"username": username, "ws": ws, "accepted": accepted})
+    //                         console.log(`Player ${username} has ${accepted ? "accepted" : "declined"}`)
+    //                     }
+    //                 }
+    //             }
+                                            
+    //         }
+    //     }
+    // })
+    // ws.send("CONNECTED")
 })
 
 wss_client_gm.on("error", (error) => {
@@ -216,6 +203,41 @@ wss_client_gm.on("error", (error) => {
 
 wss_client_gm.on("close", () => {
     console.log("WSS_CLIENT_GM closed")
+})
+
+// check for upgrade request to websocket from a logged in user
+server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
+    console.log(request.headers)
+    // Get cookies
+    const cookies = request.headers["cookie"] ?? ""
+    if(cookies === ""){ // if no cookies, close connection
+        socket.destroy()
+        return
+    }
+    const cookiepairs = cookies.split(";");
+    const cookiesplittedPairs = cookiepairs.map(cookie => cookie.split("="));
+    const cookieObj: { [key: string]: string } = {}
+    cookiesplittedPairs.forEach((pair) => {
+        // set each cookie value in the cookieObj
+        cookieObj[decodeURIComponent(pair[0].trim())] = decodeURIComponent(pair[1].trim())
+    })
+    console.log(cookieObj)
+
+    if(!cookieObj["srtoken"]){ // if no srtoken cookie, close connection
+        socket.destroy()
+        return
+    }
+
+    // Authenticate using jwt from cookie srtoken
+    
+
+    wss_client_gm.handleUpgrade(request, socket, head, (ws) => {
+        wss_client_gm.emit("connection", ws, request)
+    })
+})
+
+server_wss_CLIENT_GM.listen(PORT_CLIENT_GM, () => {
+    console.log(`SERVER_WSS_CLIENT_GM is running on http://localhost:${PORT_CLIENT_GM}`)
 })
 
 // SECTION: SERVER SENT EVENTS
