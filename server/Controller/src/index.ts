@@ -156,6 +156,11 @@ server.on("upgrade", async (request, socket, head) => {
     }
     const user_id: string = claims["sub"]
     
+    if(allowedUsers.findIndex((element) => { return element["user_id"] === user_id}) === -1){ // if user is not in allowedUsers, close connection
+        socket.destroy()
+        return
+    }
+
     // valid logged in user, upgrade connection to websocket
     wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit("connection", ws, request, user_id)
