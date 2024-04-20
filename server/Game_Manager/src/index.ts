@@ -13,9 +13,9 @@ const prisma = new PrismaClient()
 // Environment variables
 dotenv.config({ path: "./.env" })
 const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
-const PORT_GM_RASPBERRY = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
-const PORT_CLIENT_GM = parseInt(`${process.env.PORT_CLIENT_GM}`)
-const PORT_EXPRESS_CONTROLLER_GAMEMANAGER = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
+const PORT_GM_RASPBERRY: number = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
+const PORT_CLIENT_GM: number = parseInt(`${process.env.PORT_CLIENT_GM}`)
+const PORT_EXPRESS_CONTROLLER_GAMEMANAGER: number = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
 
 // SHARED VARIABLES
 const queue: Array<{username: string, user_id: string, ws: any}> = []
@@ -50,78 +50,85 @@ const gameCycle = setInterval(() => {
     else if(game_state == GAME_STATE.SEND_CONFIRM){
         // Check if received 2 confirmation response
         if(confirmation_timer == 0){ // time's up
-            if(players.length == 2){ // 2 confirmations
-                // 2 accepts -> start game
-                if(players[0]["accepted"] && players[1]["accepted"]){
-                    game_state = GAME_STATE.PLAYING
-                    CONTROLLER_ACCESS = nanoid() // new access code for each game
-                    // tell Controller server to change access code
-                    fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
+            // 2 accepts -> start game
+            if(players.length == 2 && players[0]["accepted"] && players[1]["accepted"]){
+                game_state = GAME_STATE.PLAYING
+                CONTROLLER_ACCESS = nanoid() // new access code for each game
+                // tell Controller server to change access code
+                fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        "accesspassword": CONTROLLER_ACCESS
+                    })
+                }).then(() => {
+                    console.log(players[0]["username"] + " vs " + players[1]["username"])
+                    
+                    // authorize players in Controller server to send key inputs
+                    fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify({
-                            "accesspassword": CONTROLLER_ACCESS
+                            "playernumber": 0,
+                            "username": players[0]["username"],
+                            "user_id": players[0]["user_id"]
                         })
                     }).then(() => {
-                        console.log(players[0]["username"] + " vs " + players[1]["username"])
-                        
-                        // authorize players in Controller server to send key inputs
                         fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
                             method: "POST",
                             headers: {"Content-Type": "application/json"},
                             body: JSON.stringify({
-                                "playernumber": 0,
-                                "username": players[0]["username"],
-                                "user_id": players[0]["user_id"]
+                                "playernumber": 1,
+                                "username": players[1]["username"],
+                                "user_id": players[1]["user_id"]
                             })
-                        }).then(() => {
-                            fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
-                                method: "POST",
-                                headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({
-                                    "playernumber": 1,
-                                    "username": players[1]["username"],
-                                    "user_id": players[1]["user_id"]
-                                })
-                            }).then(() => { // give players the access code to connect to Controller server WebSocket
-                                queue[0].ws.send(JSON.stringify({
-                                    "type": "MATCH_START",
-                                    "payload": CONTROLLER_ACCESS
-                                }))
-                                queue[1].ws.send(JSON.stringify({
-                                    "type": "MATCH_START",
-                                    "payload": CONTROLLER_ACCESS
-                                }))
-                                // close ws because players are not in queue anymore
-                                queue[0]["ws"].close()
-                                queue[1]["ws"].close()
-                                queue.splice(0, 2)
-                                timer = 60
-                                // yay
-                            })
+                        }).then(() => { // give players the access code to connect to Controller server WebSocket
+                            queue[0].ws.send(JSON.stringify({
+                                "type": "MATCH_START",
+                                "payload": CONTROLLER_ACCESS
+                            }))
+                            queue[1].ws.send(JSON.stringify({
+                                "type": "MATCH_START",
+                                "payload": CONTROLLER_ACCESS
+                            }))
+                            // close ws because players are not in queue anymore
+                            queue[0]["ws"].close()
+                            queue[1]["ws"].close()
+                            queue.splice(0, 2)
+                            timer = 60
+                            // yay
                         })
                     })
+                })
+            }
+            else{ // did not get 2 accepts
+                // find the player(s) that declined/did not respond and remove from queue/close ws connection
+                // index of user queue[0] in players array
+                const indexA: number = players.findIndex((element) => { return element["username"] === queue[0]["username"]})
+                // index of user queue[1] in players array
+                const indexB: number = players.findIndex((element) => { return element["username"] === queue[1]["username"]})
+                let removeA: boolean = false
+                let removeB: boolean = false
+                if(indexA == -1 || players[indexA]["accepted"] === false){ // close connection for player A if did not respond or declined
+                    queue[0]["ws"].close()
+                    removeA = true
                 }
-                else{
-                    // did not get 2 accepts
-                    // find the player(s) that declined and remove from queue/close ws connection
-                    const indexA: number = queue.findIndex((element) => { return element["username"] === players[0]["username"]})
-                    const indexB: number = queue.findIndex((element) => { return element["username"] === players[1]["username"]})
-                    if(players[0]["accepted"] === false && players[1]["accepted"] === false){
-                        queue[0]["ws"].close()
-                        queue[1]["ws"].close()
-                        queue.splice(0, 2)
-                    }
-                    else{
-                        const indexToRemove = (players[0]["accepted"]) ? indexB : indexA
-                        queue[indexToRemove]["ws"].close()
-                        // reset the confirmation of the other player
-                        queue[1 - indexToRemove]["ws"].send(JSON.stringify({"type": "MATCH_CONFIRMATION_RESET", "payload": ""}))
-                        queue.splice(indexToRemove, 1)
-                    }
-                    game_state = GAME_STATE.NOT_PLAYING
-                    players.splice(0, players.length) // clear array
+                if(indexB == -1 || players[indexB]["accepted"] === false){ // close connection for player B if did not respond or declined
+                    queue[1]["ws"].close()
+                    removeB = true
                 }
+                // remove declined/did not respond players from queue
+                if(removeA && removeB){
+                    queue.splice(0, 2)
+                }
+                else if(removeA){
+                    queue.splice(0, 1)
+                }
+                else if(removeB){
+                    queue.splice(1, 1)
+                }
+                game_state = GAME_STATE.NOT_PLAYING
+                players.splice(0, players.length) // clear array
             }
         }
         confirmation_timer--
