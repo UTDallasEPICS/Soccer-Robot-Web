@@ -18,8 +18,8 @@ const PORT_CLIENT_GM = parseInt(`${process.env.PORT_CLIENT_GM}`)
 const PORT_EXPRESS_CONTROLLER_GAMEMANAGER = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
 
 // SHARED VARIABLES
-const queue: Array<{username: string, ws: any}> = []
-const players: Array<{username: string, ws: any, accepted: boolean}> = []
+const queue: Array<{username: string, user_id: string, ws: any}> = []
+const players: Array<{username: string, user_id: string, ws: any, accepted: boolean}> = []
 let CONFIRMATION_PASSWORD: string = "sousounofrieren" // "Tearful goodbyes aren’t our style. It’d be embarrassing when we meet again"
 let CONTROLLER_ACCESS: string = "donutvampire" // the initial value does not do anything here
 let timer: number = 0
@@ -71,7 +71,8 @@ const gameCycle = setInterval(() => {
                             headers: {"Content-Type": "application/json"},
                             body: JSON.stringify({
                                 "playernumber": 0,
-                                "username": players[0]["username"]
+                                "username": players[0]["username"],
+                                "user_id": players[0]["user_id"]
                             })
                         }).then(() => {
                             fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
@@ -79,7 +80,8 @@ const gameCycle = setInterval(() => {
                                 headers: {"Content-Type": "application/json"},
                                 body: JSON.stringify({
                                     "playernumber": 1,
-                                    "username": players[1]["username"]
+                                    "username": players[1]["username"],
+                                    "user_id": players[1]["user_id"]
                                 })
                             }).then(() => { // give players the access code to connect to Controller server WebSocket
                                 queue[0].ws.send(JSON.stringify({
@@ -159,7 +161,7 @@ const gameCycle = setInterval(() => {
 const server_wss_CLIENT_GM = createServer()
 const wss_client_gm = new WebSocketServer({ noServer: true })
 
-wss_client_gm.on("connection", (ws: any, request: IncomingMessage, username: string) => {
+wss_client_gm.on("connection", (ws: any, request: IncomingMessage, username: string, user_id: string) => {
     console.log("New connection!")
 
     // kick user if ws connection is lost or closed
@@ -180,7 +182,7 @@ wss_client_gm.on("connection", (ws: any, request: IncomingMessage, username: str
             const player_index = players.findIndex((element) => { return element.username === username })
             if(index == -1 && player_index == -1){
                 console.log("ADDING " + username)
-                queue.push({"username": username, "ws": ws})
+                queue.push({"username": username, "user_id": user_id, "ws": ws})
             }
         }
         else if(type === "LEAVE_QUEUE"){
@@ -200,7 +202,7 @@ wss_client_gm.on("connection", (ws: any, request: IncomingMessage, username: str
                     if(player_index == -1){
                         // make sure users are the next 2 in queue
                         if(queue[0]["username"] === username || queue[1]["username"] === username){
-                            players.push({"username": username, "ws": ws, "accepted": accepted})
+                            players.push({"username": username, "user_id": user_id, "ws": ws, "accepted": accepted})
                             console.log(`Player ${username} has ${accepted ? "accepted" : "declined"}`)
                         }
                     }
@@ -267,8 +269,7 @@ server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
 
     // valid logged in user, upgrade connection to websocket
     wss_client_gm.handleUpgrade(request, socket, head, (ws) => {
-        queue.push({"username": find_user.username, "ws": ws})
-        wss_client_gm.emit("connection", ws, request, find_user.username)
+        wss_client_gm.emit("connection", ws, request, find_user.username, user_id)
     })
 })
 
