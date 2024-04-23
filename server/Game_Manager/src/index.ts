@@ -30,7 +30,7 @@ enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
 
 // SECTION: GAME CYCLES
-const gameCycle = setInterval(() => {
+const gameCycle = setInterval( async () => {
     if(game_state == GAME_STATE.NOT_PLAYING){
         // Check for sufficient users in queue to send confirmation request
         if(queue.length >= 2){
@@ -55,51 +55,49 @@ const gameCycle = setInterval(() => {
                 game_state = GAME_STATE.PLAYING
                 CONTROLLER_ACCESS = nanoid() // new access code for each game
                 // tell Controller server to change access code
-                fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
+                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
                         "accesspassword": CONTROLLER_ACCESS
                     })
-                }).then(() => {
-                    console.log(players[0]["username"] + " vs " + players[1]["username"])
-                    
-                    // authorize players in Controller server to send key inputs
-                    fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({
-                            "playernumber": 0,
-                            "username": players[0]["username"],
-                            "user_id": players[0]["user_id"]
-                        })
-                    }).then(() => {
-                        fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
-                            method: "POST",
-                            headers: {"Content-Type": "application/json"},
-                            body: JSON.stringify({
-                                "playernumber": 1,
-                                "username": players[1]["username"],
-                                "user_id": players[1]["user_id"]
-                            })
-                        }).then(() => { // give players the access code to connect to Controller server WebSocket
-                            queue[0].ws.send(JSON.stringify({
-                                "type": "MATCH_START",
-                                "payload": CONTROLLER_ACCESS
-                            }))
-                            queue[1].ws.send(JSON.stringify({
-                                "type": "MATCH_START",
-                                "payload": CONTROLLER_ACCESS
-                            }))
-                            // close ws because players are not in queue anymore
-                            queue[0]["ws"].close()
-                            queue[1]["ws"].close()
-                            queue.splice(0, 2)
-                            timer = 60
-                            // yay
-                        })
+                })
+                console.log(players[0]["username"] + " vs " + players[1]["username"])
+                // authorize players in Controller server to send key inputs
+                // TODO: change this to 1 network request
+                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        "playernumber": 0,
+                        "username": players[0]["username"],
+                        "user_id": players[0]["user_id"]
                     })
                 })
+                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        "playernumber": 1,
+                        "username": players[1]["username"],
+                        "user_id": players[1]["user_id"]
+                    })
+                })
+                // give players the access code to connect to Controller server WebSocket
+                queue[0].ws.send(JSON.stringify({
+                    "type": "MATCH_START",
+                    "payload": CONTROLLER_ACCESS
+                }))
+                queue[1].ws.send(JSON.stringify({
+                    "type": "MATCH_START",
+                    "payload": CONTROLLER_ACCESS
+                }))
+                // close ws because players are not in queue anymore
+                queue[0]["ws"].close()
+                queue[1]["ws"].close()
+                queue.splice(0, 2)
+                timer = 60
+                // yay
             }
             else{ // did not get 2 accepts
                 // find the player(s) that declined/did not respond and remove from queue/close ws connection
@@ -143,7 +141,8 @@ const gameCycle = setInterval(() => {
     }
     else if(game_state == GAME_STATE.RESETTING){
         // Game end: remove players from authorization in Controller server and clear player array
-        fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeuser`, {
+        // TODO: change this to 1 network request
+        await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeuser`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -151,7 +150,7 @@ const gameCycle = setInterval(() => {
                 "username": players[0]["username"]
             })
         })
-        fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeuser`, {
+        await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeuser`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
