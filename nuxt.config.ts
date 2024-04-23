@@ -2,7 +2,11 @@
 export default defineNuxtConfig({
   runtimeConfig: {
     CHANNEL_NAME: '',
-    PARENT_NAME: ''
+    PARENT_NAME: '',
+    AUTH0_CLIENTID: '',
+    AUTH0_SECRET: '',
+    BASEURL: '',
+    ISSUER: '',
   },
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss']
