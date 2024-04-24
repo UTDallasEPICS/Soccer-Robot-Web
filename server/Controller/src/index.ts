@@ -10,7 +10,7 @@ dotenv.config({ path: "./.env" })
 const PORT_SERVER: number = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
 const PORT_WSS_CLIENT: number = parseInt(`${process.env.PORT_WSS_CONTROLLER_CLIENT}`)
 const PORT_WSS_RASPBERRY: number = parseInt(`${process.env.PORT_WSS_CONTROLLER_RASPBERRY}`)
-let CONTROLLER_ACCESS: string = process.env.CONTROLLER_ACCESS ?? ""
+let CONTROLLER_ACCESS: string = ""
 
 // Temporary queue until Auth0+database is set up
 // ws to close connection on POST /removeuser
