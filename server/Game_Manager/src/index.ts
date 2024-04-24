@@ -28,23 +28,32 @@ let score1: number = 0
 let score2: number = 0
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
+let robots_ready: boolean = false
 
 // SECTION: GAME CYCLES
 const gameCycle = setInterval( async () => {
     if(game_state == GAME_STATE.NOT_PLAYING){
         // Check for sufficient users in queue to send confirmation request
         if(queue.length >= 2){
-            game_state = GAME_STATE.SEND_CONFIRM
-            CONFIRMATION_PASSWORD = nanoid() // new password for each confirmation attempt
-            queue[0].ws.send(JSON.stringify({
-                "type": "MATCH_CONFIRMATION",
-                "payload": CONFIRMATION_PASSWORD
-            }))
-            queue[1].ws.send(JSON.stringify({
-                "type": "MATCH_CONFIRMATION",
-                "payload": CONFIRMATION_PASSWORD
-            }))
-            confirmation_timer = 15 // 15 seconds to confirm
+            if(robots_ready){ // robots are ready to play
+                game_state = GAME_STATE.SEND_CONFIRM
+                CONFIRMATION_PASSWORD = nanoid() // new password for each confirmation attempt
+                queue[0].ws.send(JSON.stringify({
+                    "type": "MATCH_CONFIRMATION",
+                    "payload": CONFIRMATION_PASSWORD
+                }))
+                queue[1].ws.send(JSON.stringify({
+                    "type": "MATCH_CONFIRMATION",
+                    "payload": CONFIRMATION_PASSWORD
+                }))
+                confirmation_timer = 15 // 15 seconds to confirm
+            }
+            else{ // ask if robots are ready to play
+                ws_raspberry.send(JSON.stringify({
+                    "type": "CHECK_READY",
+                    "payload": ""
+                }))
+            }
         }
     }
     else if(game_state == GAME_STATE.SEND_CONFIRM){
@@ -136,6 +145,7 @@ const gameCycle = setInterval( async () => {
                                     {"user_id": players[1]["user_id"]}])
         })
         players.splice(0, 2)
+        robots_ready = false
         game_state = GAME_STATE.NOT_PLAYING
     }
 }, 1000)
@@ -339,11 +349,18 @@ ws_raspberry.onclose = (event) => {
 ws_raspberry.onmessage = (event) => {
     const { type, payload } = JSON.parse(event.data.toString())
     console.log(`Received message => ${type} : ${payload}`)
-    if(type === "TIMER") {
+    if(type === "IS_READY") {
+        robots_ready = payload
+    }
+    else if(type === "TIMER_UPDATE"){
         timer = payload
     }
-    else if(type === "SCORE"){
-        score1 = payload["score1"]
-        score2 = payload["score2"]
+    else if(type === "SCORE_UPDATE"){
+        const { score1:s1Update, score2:s2Update } : { score1: number, score2: number } = payload
+        score1 = s1Update
+        score2 = s2Update
+    }
+    else if(type === "GAME_END"){
+        // "payload": {"timer": 0, "score1": 0, "score2": 0}
     }
 }
