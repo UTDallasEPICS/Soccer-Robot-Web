@@ -6,7 +6,9 @@ import { createServer, IncomingMessage } from "http"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 import { PrismaClient } from "@prisma/client"
-import { nanoid } from "nanoid"
+// import { nanoid } from "nanoid" // DO NOT USE, DOES NOT SUPPORT COMMONJS WHICH TS-NODE IS BUILDING INTO
+// there is probably a way to make ts-node use esm but I am too lazy to find out
+import { v4 as uuidv4 } from "uuid" // using this instead of nanoid
 
 const prisma = new PrismaClient()
 
@@ -35,7 +37,7 @@ const gameCycle = setInterval( async () => {
         // Check for sufficient users in queue to send confirmation request
         if(queue.length >= 2){
             game_state = GAME_STATE.SEND_CONFIRM
-            CONFIRMATION_PASSWORD = nanoid() // new password for each confirmation attempt
+            CONFIRMATION_PASSWORD = uuidv4() // new password for each confirmation attempt
             queue[0].ws.send(JSON.stringify({
                 "type": "MATCH_CONFIRMATION",
                 "payload": CONFIRMATION_PASSWORD
@@ -53,7 +55,7 @@ const gameCycle = setInterval( async () => {
             // 2 accepts -> start game
             if(players.length == 2 && players[0]["accepted"] && players[1]["accepted"]){
                 game_state = GAME_STATE.PLAYING
-                CONTROLLER_ACCESS = nanoid() // new access code for each game
+                CONTROLLER_ACCESS = uuidv4() // new access code for each game
                 // tell Controller server to change access code
                 await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
                     method: "POST",
