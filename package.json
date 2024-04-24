@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "boot": "ts-node server/Game_Manager/src/index.ts"
+    "bootgame": "tsx server/Game_Manager/src/index.ts",
+    "bootcontrol": "tsx server/Controller/src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.11.0",
@@ -18,7 +19,6 @@
     "nanoid": "^5.0.7",
     "nuxt": "^3.10.2",
     "prisma": "^5.11.0",
-    "uuid": "^9.0.1",
     "vue": "^3.4.19",
     "vue-router": "^4.2.5",
     "ws": "^8.16.0"
@@ -29,7 +29,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/uuid": "^9.0.8",
     "@types/ws": "^8.5.10",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.7.2",
     "typescript": "^5.4.5"
   }
 }
