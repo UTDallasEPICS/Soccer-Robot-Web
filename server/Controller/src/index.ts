@@ -14,18 +14,28 @@ let CONTROLLER_ACCESS: string = ""
 
 // Temporary queue until Auth0+database is set up
 // ws to close connection on POST /removeuser
-const allowedUsers: Array<{"username": string, "user_id": string, "playernumber": number, "ws": any}> = []
+const allowedUsers: Array<{"user_id": string, "playernumber": number, "ws": any}> = []
 
 const printCurrentUsers = () => {
     let output = ""
-    allowedUsers.forEach((element) => {output += element["username"] + " "})
+    allowedUsers.forEach((element) => {output += element["user_id"] + " "})
     return output
 }
 
 // WEBSOCKET RASPBERRY
 // Make sure to set up Raspberry server first
 const ws_raspberry = new WebSocket(`ws://localhost:${PORT_WSS_RASPBERRY}`)
-console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_WSS_RASPBERRY}`)
+
+ws_raspberry.onopen = (event) => {
+    console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_WSS_RASPBERRY}`)
+}
+
+ws_raspberry.onerror = (error) => {
+    console.log("WS_RASPBERRY error: " + error)
+}
+ws_raspberry.onclose = (event) => {
+    console.log("WS_RASPBERRY closed")
+}
 
 // SECTION: EXPRESS SERVER: GAME_MANAGER -> CONTROLLER
 // THIS IS A PRIVATE PORT
@@ -43,24 +53,23 @@ app.post("/accesspassword", (request, response) => {
 })
 
 app.post("/adduser", (request, response) => {
-    const username: string = request.body.username
     const user_id: string = request.body.user_id
     const playernumber: number = request.body.playernumber
     let status = 400
     // If allowedUsers.lenth < 2 and user is not in allowedUsers
-    if(allowedUsers.length < 2 && allowedUsers.findIndex((element) => {return element["username"] === username}) == -1){
+    if(allowedUsers.length < 2 && allowedUsers.findIndex((element) => {return element["user_id"] === user_id}) == -1){
         // ws is set after the player connects through WebSocket
-        allowedUsers.push({"username": username, "user_id": user_id, "playernumber": playernumber, "ws": null})
-        response.send(`ADDED PLAYER ${playernumber} as ${username}`)
-        console.log(`ADDED PLAYER ${playernumber} as ${username} | ALLOWED_USERS: ${printCurrentUsers()}`)
+        allowedUsers.push({"user_id": user_id, "playernumber": playernumber, "ws": null})
+        response.send(`ADDED PLAYER ${playernumber} as ${user_id}`)
+        console.log(`ADDED PLAYER ${playernumber} as ${user_id} | ALLOWED_USERS: ${printCurrentUsers()}`)
         status = 200
     }
     response.status(status).end()
 })
 
 app.post("/removeuser", (request, response) => {
-    const username: string = request.body.username
-    const index = allowedUsers.findIndex((element) => {return element["username"] === username})
+    const user_id: string = request.body.user_id
+    const index = allowedUsers.findIndex((element) => {return element["user_id"] === user_id})
     let status = 400
     // If user is in allowedUsers
     if(index != -1){
@@ -68,10 +77,60 @@ app.post("/removeuser", (request, response) => {
             allowedUsers[index]["ws"].close()
         }
         allowedUsers.splice(index, 1)
-        response.send(`REMOVED ${username}`)
-        console.log(`REMOVED ${username} | ALLOWED_USERS: ${printCurrentUsers()}`)
+        response.send(`REMOVED ${user_id}`)
+        console.log(`REMOVED ${user_id} | ALLOWED_USERS: ${printCurrentUsers()}`)
         status = 200
     }
+    response.status(status).end()
+})
+
+app.post("/addusers", (request, response) => {
+    /* Example request body
+        {
+            "users":[{"user_id":"abc","playernumber":0},{"user_id":"def","playernumber":1}]
+        }
+    */
+    const users = request.body.users
+    // console.log(Object.keys(users)) // [ '0', '1' , ...]
+    let status = 400
+    // If allowedUsers.lenth < 2 and user is not in allowedUsers
+    Object.keys(users).forEach((key) => {
+        const user_id = users[key]["user_id"]
+        const playernumber = users[key]["playernumber"]
+        if(allowedUsers.length < 2 && allowedUsers.findIndex((element) => {return element["user_id"] === user_id}) == -1){
+            // ws is set after the player connects through WebSocket
+            allowedUsers.push({"user_id": user_id, "playernumber": playernumber, "ws": null})
+            // response.send(`ADDED PLAYER ${playernumber} as ${user_id}`)
+            console.log(`ADDED PLAYER ${playernumber} as ${user_id} | ALLOWED_USERS: ${printCurrentUsers()}`)
+            status = 200
+        }
+    })
+    response.status(status).end()
+})
+
+app.post("/removeusers", (request, response) => {
+    /* Example request body
+    {
+        "users":[{"user_id":"abc"},{"user_id":"def"}]
+    }
+    */
+    const users = request.body.users
+    // console.log(Object.keys(users)) // [ '0', '1' , ...]
+    let status = 400
+    Object.keys(users).forEach((key) => {
+        const user_id = users[key]["user_id"]
+        const index = allowedUsers.findIndex((element) => {return element["user_id"] === user_id})
+        // If user is in allowedUsers
+        if(index != -1){
+            if(allowedUsers[index]["ws"]){ // Close ws connection if connected
+                allowedUsers[index]["ws"].close()
+            }
+            allowedUsers.splice(index, 1)
+            // response.send(`REMOVED ${user_id}`)
+            console.log(`REMOVED ${user_id} | ALLOWED_USERS: ${printCurrentUsers()}`)
+            status = 200
+        }
+    })
     response.status(status).end()
 })
 
