@@ -23,6 +23,7 @@ const players: Array<{username: string, user_id: string, ws: any, accepted: bool
 let CONFIRMATION_PASSWORD: string = "sousounofrieren" // "Tearful goodbyes aren’t our style. It’d be embarrassing when we meet again"
 let CONTROLLER_ACCESS: string = "donutvampire" // the initial value does not do anything here
 let timer: number = 0
+const timer_duration: number = 300 // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 let score1: number = 0
 let score2: number = 0
@@ -92,8 +93,12 @@ const gameCycle = setInterval( async () => {
                 queue[0]["ws"].close()
                 queue[1]["ws"].close()
                 queue.splice(0, 2)
-                timer = 60
-                // yay
+                timer = timer_duration
+                // tell Raspberry server to start the game
+                ws_raspberry.send(JSON.stringify({
+                    "type": "GAME_START",
+                    "payload": {"timer": timer_duration}
+                }))
             }
             else{ // did not get 2 accepts
                 // find the player(s) that declined/did not respond and remove from queue/close ws connection
@@ -137,7 +142,6 @@ const gameCycle = setInterval( async () => {
     }
     else if(game_state == GAME_STATE.RESETTING){
         // Game end: remove players from authorization in Controller server and clear player array
-        // TODO: change this to 1 network request
         await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeusers`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -146,6 +150,10 @@ const gameCycle = setInterval( async () => {
         })
         players.splice(0, 2)
         robots_ready = false
+        // TODO: store new match record in database
+        timer = 0
+        score1 = 0
+        score2 = 0
         game_state = GAME_STATE.NOT_PLAYING
     }
 }, 1000)
@@ -361,6 +369,11 @@ ws_raspberry.onmessage = (event) => {
         score2 = s2Update
     }
     else if(type === "GAME_END"){
+        const { timer:finalTimer, score1:s1final, score2:s2final } : { timer: number, score1: number, score2: number } = payload
         // "payload": {"timer": 0, "score1": 0, "score2": 0}
+        timer = finalTimer
+        score1 = s1final
+        score2 = s2final
+        game_state = GAME_STATE.RESETTING
     }
 }
