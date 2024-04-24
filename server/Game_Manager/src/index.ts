@@ -64,24 +64,11 @@ const gameCycle = setInterval( async () => {
                 })
                 console.log(players[0]["username"] + " vs " + players[1]["username"])
                 // authorize players in Controller server to send key inputs
-                // TODO: change this to 1 network request
-                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
+                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/addusers`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                        "playernumber": 0,
-                        "username": players[0]["username"],
-                        "user_id": players[0]["user_id"]
-                    })
-                })
-                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/adduser`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                        "playernumber": 1,
-                        "username": players[1]["username"],
-                        "user_id": players[1]["user_id"]
-                    })
+                    body: JSON.stringify([  {"user_id": players[0]["user_id"], "playernumber": 0}, 
+                                            {"user_id": players[1]["user_id"], "playernumber": 1}])
                 })
                 // give players the access code to connect to Controller server WebSocket
                 queue[0].ws.send(JSON.stringify({
@@ -142,21 +129,11 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.RESETTING){
         // Game end: remove players from authorization in Controller server and clear player array
         // TODO: change this to 1 network request
-        await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeuser`, {
+        await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeusers`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                "playernumber": 0,
-                "username": players[0]["username"]
-            })
-        })
-        await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeuser`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                "playernumber": 0,
-                "username": players[1]["username"]
-            })
+            body: JSON.stringify([  {"user_id": players[0]["user_id"]}, 
+                                    {"user_id": players[1]["user_id"]}])
         })
         players.splice(0, 2)
         game_state = GAME_STATE.NOT_PLAYING
