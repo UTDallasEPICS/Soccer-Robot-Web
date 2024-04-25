@@ -12,12 +12,17 @@
                 </span>
             </div>
             <QueueContainer @join-queue="joinQueue" @leave-queue="leaveQueue"></QueueContainer>
+            <ConfirmMatchOverlay v-if="confirmationRequest" @confirm-response="confirmMatch"/>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 const ws_queue = ref<WebSocket>()
+const ws_controller = ref<WebSocket>()
+const confirmationRequest = ref(true)
+const confirmationPassword = ref("")
+
 const joinQueue = () => {
     ws_queue.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_CLIENT_GM}`)
     ws_queue.value.onerror = (event) => {
@@ -31,10 +36,15 @@ const joinQueue = () => {
         const { type, payload } = JSON.parse(event.data)
         console.log(`Received message => ${type} : ${payload}`)
         if(type === "MATCH_CONFIRMATION") {
+            confirmationPassword.value = payload
+            confirmationRequest.value = true
         }
         else if(type === "MATCH_CONFIRMATION_RESET"){
+            confirmationRequest.value = false
         }
         else if(type === "MATCH_START"){
+            confirmationRequest.value = false
+            ws_controller.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
         }
     }
     ws_queue.value.onopen = (event) => {
@@ -54,6 +64,15 @@ const leaveQueue = () => {
             payload: ""
         }
         ws_queue.value.send(JSON.stringify(message))
+    }
+}
+
+const confirmMatch = (accepted: boolean) => {
+    if(ws_queue.value?.OPEN){
+        ws_queue.value.send(JSON.stringify({
+            type: "CONFIRMATION",
+            payload: {"password": confirmationPassword.value, "accepted": accepted}
+        }))
     }
 }
 </script>
