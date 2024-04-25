@@ -154,15 +154,16 @@ wss.on("connection", (ws: any, request: IncomingMessage, user_id: string) => {
 
     ws.on("message", (data: any) => {
         const { type, payload } = JSON.parse(data)
-        
         if(type === "KEY_INPUT"){
-            if(payload === "w" || payload === "a" || payload === "s" || payload === "d"){
+            // example payload in form of "1010", corresponding to "wasd", 1 for on, 0 for off
+            const regex = /[01][01][01][01]/
+            if(regex.test(payload)){
                 console.log(`PLAYER ${playernumber}: ${user_id} | ${type} : ${payload}`)
                 // Forward KEY_INPUT to Raspberry server
                 ws_raspberry.send(JSON.stringify({
                     "type": "KEY_INPUT",
                     "payload": {
-                        "key": payload,
+                        "keys": payload,
                         "playernumber": playernumber
                     }
                 }))
