@@ -1,6 +1,6 @@
-<template lang="pug">
+<template lang>
 //- <NuxtWelcome />
-NuxtPage
+<NuxtPage/>
 </template>
 
 <script setup lang="ts">

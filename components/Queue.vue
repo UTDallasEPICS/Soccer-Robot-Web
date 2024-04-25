@@ -13,6 +13,9 @@
 </template>
 
 <script setup lang = "ts">
+const emit = defineEmits(["join-queue", "leave-queue"])
+
+const queueUsers = ref<Array<string>>([])
 const buttonStatus = ref("Join Queue");    
 const buttonColor = ref("#5FE0B7");
 let cardColor = "#D9D9D9";
@@ -31,35 +34,22 @@ const changeCardColor = (index:number) => {
     return cardColor;
 }
 
-const queueUsers = ref<Array<string>>([])
-const counter = ref(0)
 const getTwoUsers = (index: number) => {
     let name1: string = (index < queueUsers.value.length) ? queueUsers.value[index] : ""
     let name2: string = (index+1 < queueUsers.value.length) ? queueUsers.value[index+1] : ""
     return [name1, name2]
 }
 
-
-const addUser = () => {
-    queueUsers.value.push(String(counter.value))
-    counter.value++
-}
-
-const removeUser = () => {
-    queueUsers.value.pop();
-    counter.value--;
-}
-
 const changeButton = () => {
     if(buttonColor.value == '#5FE0B7')
     {
-        addUser();
+        emit("join-queue")
         buttonColor.value = '#FF0000';
         buttonStatus.value = 'Leave Queue';
     }
     else
     {
-        removeUser();
+        emit("leave-queue")
         buttonColor.value = '#5FE0B7'
         buttonStatus.value = 'Join Queue';
     }
