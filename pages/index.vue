@@ -20,7 +20,7 @@
 <script setup lang="ts">
 const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()
-const confirmationRequest = ref(true)
+const confirmationRequest = ref(false)
 const confirmationPassword = ref("")
 
 const joinQueue = () => {
