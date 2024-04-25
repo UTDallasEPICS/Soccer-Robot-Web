@@ -7,6 +7,10 @@ export default defineNuxtConfig({
     AUTH0_SECRET: '',
     BASEURL: '',
     ISSUER: '',
+    public:{
+      PORT_CLIENT_GM: '',
+      PORT_WSS_CONTROLLER_CLIENT: ''
+    }
   },
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss']

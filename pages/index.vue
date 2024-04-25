@@ -11,15 +11,68 @@
                     <VideoStream></VideoStream>
                 </span>
             </div>
-            <QueueContainer></QueueContainer>
+            <QueueContainer @join-queue="joinQueue" @leave-queue="leaveQueue"></QueueContainer>
+            <ConfirmMatchOverlay v-if="confirmationRequest" @confirm-response="confirmMatch"/>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+const ws_queue = ref<WebSocket>()
+const ws_controller = ref<WebSocket>()
+const confirmationRequest = ref(true)
+const confirmationPassword = ref("")
 
+const joinQueue = () => {
+    ws_queue.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_CLIENT_GM}`)
+    ws_queue.value.onerror = (event) => {
+        console.log("Error: " + event)
+        return
+    }
+    ws_queue.value.onclose = (event) => {
+        console.log("WebSocket connection closed")
+    }
+    ws_queue.value.onmessage = (event) => {
+        const { type, payload } = JSON.parse(event.data)
+        console.log(`Received message => ${type} : ${payload}`)
+        if(type === "MATCH_CONFIRMATION") {
+            confirmationPassword.value = payload
+            confirmationRequest.value = true
+        }
+        else if(type === "MATCH_CONFIRMATION_RESET"){
+            confirmationRequest.value = false
+        }
+        else if(type === "MATCH_START"){
+            confirmationRequest.value = false
+            ws_controller.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
+        }
+    }
+    ws_queue.value.onopen = (event) => {
+        console.log("WebSocket connection established")
+        let message = {
+            "type": "JOIN_QUEUE",
+            "payload": ""
+        }
+        ws_queue.value?.send(JSON.stringify(message))
+    }
+}
+
+const leaveQueue = () => {
+    if(ws_queue.value?.OPEN) {
+        let message = {
+            type: "LEAVE_QUEUE",
+            payload: ""
+        }
+        ws_queue.value.send(JSON.stringify(message))
+    }
+}
+
+const confirmMatch = (accepted: boolean) => {
+    if(ws_queue.value?.OPEN){
+        ws_queue.value.send(JSON.stringify({
+            type: "CONFIRMATION",
+            payload: {"password": confirmationPassword.value, "accepted": accepted}
+        }))
+    }
+}
 </script>
-
-<style scoped>
-/* Add any scoped styles here */
-</style>
