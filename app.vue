@@ -1,5 +1,5 @@
-<template lang>
-//- <NuxtWelcome />
+<template>
+<!-- <NuxtWelcome /> -->
 <NuxtPage/>
 </template>
 
