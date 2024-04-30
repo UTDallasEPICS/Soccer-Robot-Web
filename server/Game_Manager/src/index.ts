@@ -1,5 +1,6 @@
 import express from "express"
 import dotenv from "dotenv"
+import cors from "cors"
 import { WebSocket, WebSocketServer } from "ws"
 import { createServer, IncomingMessage } from "http"
 // import { createServer } from "https"
@@ -280,6 +281,7 @@ server_wss_CLIENT_GM.listen(PORT_CLIENT_GM, () => {
 
 // SECTION: SERVER SENT EVENTS
 const app_sse = express()
+app_sse.use(cors())
 
 const sse_clients: Array<any> = []
 
@@ -333,7 +335,9 @@ const broadcastTimer = setInterval(() => {
 }, 1000)
 
 const broadcastScore = setInterval(() => {
-    const score_update = JSON.stringify({"type": "UPDATE_SCORE", "payload": {"score1": score1, "score2": score2 }})
+    const score_update = JSON.stringify({"type": "UPDATE_SCORE", 
+                                        "payload": {"player1": {"username": players[0]?.["username"] ?? "", "score": score1},
+                                                    "player2": {"username": players[1]?.["username"] ?? "", "score": score2 }}})
     sse_clients.forEach((client) => {
         client["response"].write("data: " + score_update +"\n\n")
     })

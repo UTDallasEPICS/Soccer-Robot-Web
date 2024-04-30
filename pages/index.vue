@@ -6,12 +6,12 @@
         </div>
         <div class="flex justify-center py-6">
             <div class="flex flex-col">
-                <Scoreboard></Scoreboard>
+                <Scoreboard :timer="Number(timer ?? 0)" :user1="player1?.username ?? ''" :user2="player2?.username ?? ''" :user1score="player1?.score ?? 0" :user2score="player2?.score ?? 0"></Scoreboard>
                 <span class="py-4 pr-6">
                     <VideoStream></VideoStream>
                 </span>
             </div>
-            <QueueContainer @join-queue="joinQueue" @leave-queue="leaveQueue"></QueueContainer>
+            <QueueContainer :queueUsers="queue" @join-queue="joinQueue" @leave-queue="leaveQueue"></QueueContainer>
             <ConfirmMatchOverlay v-if="confirmationRequest" @confirm-response="confirmMatch"/>
         </div>
     </div>
@@ -22,6 +22,12 @@ const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()
 const confirmationRequest = ref(false)
 const confirmationPassword = ref("")
+
+const sse = ref()
+const queue = ref<Array<string>>()
+const timer = ref<Number>(0)
+const player1 = ref<{score: number, username: string}>()
+const player2 = ref<{score: number, username: string}>()
 
 const joinQueue = () => {
     ws_queue.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_CLIENT_GM}`)
@@ -74,5 +80,27 @@ const confirmMatch = (accepted: boolean) => {
             payload: {"password": confirmationPassword.value, "accepted": accepted}
         }))
     }
+}
+
+if(process.client){
+    sse.value = new EventSource(`http://localhost:${useRuntimeConfig().public.PORT_SSE_GM}/sse-info`)
+    sse.value.addEventListener("message", (message: any) => {
+        const data = JSON.parse(message.data)
+        const type = data["type"]
+        if(type === "UPDATE_QUEUE"){
+            const payload: Array<string> = data["payload"]
+            queue.value = payload
+        }
+        else if(type === "UPDATE_TIMER"){
+            const payload: number = data["payload"]
+            timer.value = payload
+        }
+        else if(type === "UPDATE_SCORE"){
+            const payload: any = data["payload"]
+            const { player1: p1, player2: p2 } : {player1: {score: number, username: string}, player2: {score: number, username: string}} = payload
+            player1.value = p1
+            player2.value = p2
+        }
+    })
 }
 </script>
