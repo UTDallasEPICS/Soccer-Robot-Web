@@ -22,6 +22,7 @@ const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()
 const confirmationRequest = ref(false)
 const confirmationPassword = ref("")
+const accesspassword = ref("")
 
 const sse = ref()
 const queue = ref<Array<string>>()
@@ -50,7 +51,39 @@ const joinQueue = () => {
         }
         else if(type === "MATCH_START"){
             confirmationRequest.value = false
+            accesspassword.value = payload
+            document.cookie = "accesspassword=" + accesspassword.value
             ws_controller.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
+            ws_controller.value.onopen = (event) => {
+                const wasdMapping: { [key: string]: number, "w": number, "a": number, "s": number, "d": number } = {"w": 0, "a": 0, "s": 0, "d": 0} 
+                const updateKeyUp = (event: KeyboardEvent) => {
+                    if(wasdMapping.hasOwnProperty(event.key)){
+                        wasdMapping[event.key] = 0
+                    }
+                }
+                const updateKeyDown = (event: KeyboardEvent) => {
+                    if(wasdMapping.hasOwnProperty(event.key)){
+                        wasdMapping[event.key] = 1
+                    }
+                }
+                window.addEventListener("keyup", updateKeyUp)
+                window.addEventListener("keydown", updateKeyDown)
+                const keyInputs = setInterval(() => {
+                    if(ws_controller.value?.OPEN){
+                        
+                        const message = {
+                            type: "KEY_INPUT",
+                            payload: "" + wasdMapping["w"] + wasdMapping["a"] + wasdMapping["s"] + wasdMapping["d"]
+                        }
+                        ws_controller.value.send(JSON.stringify(message))
+                    }
+                    else{
+                        clearInterval(keyInputs)
+                        window.removeEventListener("keyup", updateKeyUp)
+                        window.removeEventListener("keydown", updateKeyDown)
+                    }
+                }, 100)
+            }
         }
     }
     ws_queue.value.onopen = (event) => {
