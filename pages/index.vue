@@ -22,6 +22,7 @@ const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()
 const confirmationRequest = ref(false)
 const confirmationPassword = ref("")
+const accesspassword = ref("")
 
 const sse = ref()
 const queue = ref<Array<string>>()
@@ -50,7 +51,12 @@ const joinQueue = () => {
         }
         else if(type === "MATCH_START"){
             confirmationRequest.value = false
+            accesspassword.value = payload
+            document.cookie = "accesspassword=" + accesspassword.value
             ws_controller.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
+            ws_controller.value.onopen = (event) => {
+                listenForKey()
+            }
         }
     }
     ws_queue.value.onopen = (event) => {
@@ -79,6 +85,43 @@ const confirmMatch = (accepted: boolean) => {
             type: "CONFIRMATION",
             payload: {"password": confirmationPassword.value, "accepted": accepted}
         }))
+    }
+}
+
+const listenForKey = () => {
+    window.addEventListener("keyup", logKey)
+}
+
+const stopListeningForKey = () => {
+    window.removeEventListener("keyup", logKey)
+}
+
+const logKey = (event: KeyboardEvent) => {
+    console.log("Key pressed " + event.key)
+    if(ws_controller.value?.OPEN) {
+        let k: string = ""
+        switch(event.key){
+            case "w":
+                k = "1000"
+                break
+            case "a":
+                k = "0100"
+                break
+            case "s":
+                k = "0010"
+                break
+            case "d":
+                k = "0001"
+                break
+        }
+        const message = {
+            type: "KEY_INPUT",
+            payload: k
+        }
+        ws_controller.value.send(JSON.stringify(message))
+    }
+    else {
+        stopListeningForKey()
     }
 }
 
