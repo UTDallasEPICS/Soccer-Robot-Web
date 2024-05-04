@@ -48,7 +48,7 @@ const gameCycle = setInterval( async () => {
                     "type": "MATCH_CONFIRMATION",
                     "payload": CONFIRMATION_PASSWORD
                 }))
-                confirmation_timer = 15 // 15 seconds to confirm
+                confirmation_timer = 10 // 10 seconds to confirm
             }
             else{ // ask if robots are ready to play
                 ws_raspberry.send(JSON.stringify({
