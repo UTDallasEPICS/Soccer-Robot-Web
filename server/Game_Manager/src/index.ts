@@ -136,7 +136,6 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.PLAYING){
         // Check when timer reaches 0
         console.log(`TIMER: ${timer} | ${players[0]["username"]} vs ${players[1]["username"]}`)
-        timer--
         if(timer == 0){
             game_state = GAME_STATE.RESETTING
         }
@@ -149,9 +148,27 @@ const gameCycle = setInterval( async () => {
             body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"]}, 
                                     {"user_id": players[1]["user_id"]}] })
         })
+        // store played match in database
+        await prisma.match.create({
+            data: {
+                datetime: new Date(),
+                // these are the players who played and their scores
+                players: {
+                    create: [
+                        {
+                            playerID: players[0]["user_id"],
+                            playerScore: score1
+                        },
+                        {
+                            playerID: players[1]["user_id"],
+                            playerScore: score2
+                        }
+                    ]
+                }
+            }
+        })
         players.splice(0, 2)
         robots_ready = false
-        // TODO: store new match record in database
         timer = 0
         score1 = 0
         score2 = 0
