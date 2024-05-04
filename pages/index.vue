@@ -55,7 +55,34 @@ const joinQueue = () => {
             document.cookie = "accesspassword=" + accesspassword.value
             ws_controller.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
             ws_controller.value.onopen = (event) => {
-                listenForKey()
+                const wasdMapping: { [key: string]: number, "w": number, "a": number, "s": number, "d": number } = {"w": 0, "a": 0, "s": 0, "d": 0} 
+                const updateKeyUp = (event: KeyboardEvent) => {
+                    if(wasdMapping.hasOwnProperty(event.key)){
+                        wasdMapping[event.key] = 0
+                    }
+                }
+                const updateKeyDown = (event: KeyboardEvent) => {
+                    if(wasdMapping.hasOwnProperty(event.key)){
+                        wasdMapping[event.key] = 1
+                    }
+                }
+                window.addEventListener("keyup", updateKeyUp)
+                window.addEventListener("keydown", updateKeyDown)
+                const keyInputs = setInterval(() => {
+                    if(ws_controller.value?.OPEN){
+                        
+                        const message = {
+                            type: "KEY_INPUT",
+                            payload: "" + wasdMapping["w"] + wasdMapping["a"] + wasdMapping["s"] + wasdMapping["d"]
+                        }
+                        ws_controller.value.send(JSON.stringify(message))
+                    }
+                    else{
+                        clearInterval(keyInputs)
+                        window.removeEventListener("keyup", updateKeyUp)
+                        window.removeEventListener("keydown", updateKeyDown)
+                    }
+                }, 100)
             }
         }
     }
@@ -85,43 +112,6 @@ const confirmMatch = (accepted: boolean) => {
             type: "CONFIRMATION",
             payload: {"password": confirmationPassword.value, "accepted": accepted}
         }))
-    }
-}
-
-const listenForKey = () => {
-    window.addEventListener("keyup", logKey)
-}
-
-const stopListeningForKey = () => {
-    window.removeEventListener("keyup", logKey)
-}
-
-const logKey = (event: KeyboardEvent) => {
-    console.log("Key pressed " + event.key)
-    if(ws_controller.value?.OPEN) {
-        let k: string = ""
-        switch(event.key){
-            case "w":
-                k = "1000"
-                break
-            case "a":
-                k = "0100"
-                break
-            case "s":
-                k = "0010"
-                break
-            case "d":
-                k = "0001"
-                break
-        }
-        const message = {
-            type: "KEY_INPUT",
-            payload: k
-        }
-        ws_controller.value.send(JSON.stringify(message))
-    }
-    else {
-        stopListeningForKey()
     }
 }
 
