@@ -1,25 +1,26 @@
 <template>
-<svg :height="radius * 2" :width="radius * 2" :style="transformation">
-<circle
-    stroke="#154734"
-    fill="transparent"
-    :stroke-dasharray="circumference + ' ' + circumference"
-    :style="{ strokeDashoffset }"
-    :stroke-width="stroke"
-    :r="normalizedRadius"
-    :cx="radius"
-    :cy="radius"
-/>
-<circle
-    stroke="#e87500"
-    fill="transparent"
-    :stroke-dasharray="circumference + ' ' + circumference"
-    :style="{ strokeDashoffset }"
-    :stroke-width="stroke-5"
-    :r="normalizedRadius"
-    :cx="radius"
-    :cy="radius"
-/>
+<svg :height="radius * 2" :width="radius * 2">
+    <g :style="transformation">
+        <circle
+            stroke="#154734"
+            fill="transparent"
+            :style="{ strokeDashoffset }"
+            :stroke-width="stroke"
+            :r="normalizedRadius"
+            :cx="radius"
+            :cy="radius"
+        />
+        <circle
+            stroke="#e87500"
+            fill="transparent"
+            :stroke-dasharray="circumference + ' ' + circumference"
+            :style="{ strokeDashoffset }"
+            :stroke-width="stroke-10"
+            :r="normalizedRadius"
+            :cx="radius"
+            :cy="radius"
+        />
+    </g>
 </svg>
 </template>
 
