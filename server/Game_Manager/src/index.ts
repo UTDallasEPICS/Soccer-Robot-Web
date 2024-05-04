@@ -1,5 +1,6 @@
 import express from "express"
 import dotenv from "dotenv"
+import cors from "cors"
 import { WebSocket, WebSocketServer } from "ws"
 import { createServer, IncomingMessage } from "http"
 // import { createServer } from "https"
@@ -23,7 +24,7 @@ const players: Array<{username: string, user_id: string, ws: any, accepted: bool
 let CONFIRMATION_PASSWORD: string = "sousounofrieren" // "Tearful goodbyes aren’t our style. It’d be embarrassing when we meet again"
 let CONTROLLER_ACCESS: string = "donutvampire" // the initial value does not do anything here
 let timer: number = 0
-const timer_duration: number = 300 // this is the initial timer duration, in seconds
+const timer_duration: number = 30 // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 let score1: number = 0
 let score2: number = 0
@@ -77,8 +78,8 @@ const gameCycle = setInterval( async () => {
                 await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/addusers`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify([  {"user_id": players[0]["user_id"], "playernumber": 0}, 
-                                            {"user_id": players[1]["user_id"], "playernumber": 1}])
+                    body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"], "playernumber": 0}, 
+                                            {"user_id": players[1]["user_id"], "playernumber": 1}] })
                 })
                 // give players the access code to connect to Controller server WebSocket
                 queue[0].ws.send(JSON.stringify({
@@ -135,7 +136,6 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.PLAYING){
         // Check when timer reaches 0
         console.log(`TIMER: ${timer} | ${players[0]["username"]} vs ${players[1]["username"]}`)
-        timer--
         if(timer == 0){
             game_state = GAME_STATE.RESETTING
         }
@@ -145,12 +145,30 @@ const gameCycle = setInterval( async () => {
         await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeusers`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify([  {"user_id": players[0]["user_id"]}, 
-                                    {"user_id": players[1]["user_id"]}])
+            body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"]}, 
+                                    {"user_id": players[1]["user_id"]}] })
+        })
+        // store played match in database
+        await prisma.match.create({
+            data: {
+                datetime: new Date(),
+                // these are the players who played and their scores
+                players: {
+                    create: [
+                        {
+                            playerID: players[0]["user_id"],
+                            playerScore: score1
+                        },
+                        {
+                            playerID: players[1]["user_id"],
+                            playerScore: score2
+                        }
+                    ]
+                }
+            }
         })
         players.splice(0, 2)
         robots_ready = false
-        // TODO: store new match record in database
         timer = 0
         score1 = 0
         score2 = 0
@@ -280,6 +298,7 @@ server_wss_CLIENT_GM.listen(PORT_CLIENT_GM, () => {
 
 // SECTION: SERVER SENT EVENTS
 const app_sse = express()
+app_sse.use(cors())
 
 const sse_clients: Array<any> = []
 
@@ -333,7 +352,9 @@ const broadcastTimer = setInterval(() => {
 }, 1000)
 
 const broadcastScore = setInterval(() => {
-    const score_update = JSON.stringify({"type": "UPDATE_SCORE", "payload": {"score1": score1, "score2": score2 }})
+    const score_update = JSON.stringify({"type": "UPDATE_SCORE", 
+                                        "payload": {"player1": {"username": players[0]?.["username"] ?? "", "score": score1},
+                                                    "player2": {"username": players[1]?.["username"] ?? "", "score": score2 }}})
     sse_clients.forEach((client) => {
         client["response"].write("data: " + score_update +"\n\n")
     })
@@ -356,17 +377,21 @@ ws_raspberry.onclose = (event) => {
 
 ws_raspberry.onmessage = (event) => {
     const { type, payload } = JSON.parse(event.data.toString())
-    console.log(`Received message => ${type} : ${payload}`)
+    // console.log(`Received message => ${type} : ${payload}`)
     if(type === "IS_READY") {
         robots_ready = payload
+        console.log(`Received message => ${type} : ${payload}`)
     }
     else if(type === "TIMER_UPDATE"){
-        timer = payload
+        const { timer:timerUpdate } : { timer: number } = payload
+        timer = timerUpdate
+        console.log(`Received message => ${type} : ${timerUpdate}`)
     }
     else if(type === "SCORE_UPDATE"){
         const { score1:s1Update, score2:s2Update } : { score1: number, score2: number } = payload
         score1 = s1Update
         score2 = s2Update
+        console.log(`Received message => ${type} : ${score1} ${score2}`)
     }
     else if(type === "GAME_END"){
         const { timer:finalTimer, score1:s1final, score2:s2final } : { timer: number, score1: number, score2: number } = payload

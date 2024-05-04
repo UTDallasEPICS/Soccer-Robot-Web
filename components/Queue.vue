@@ -14,8 +14,9 @@
 
 <script setup lang = "ts">
 const emit = defineEmits(["join-queue", "leave-queue"])
-
-const queueUsers = ref<Array<string>>([])
+const props = defineProps({
+    queueUsers: {type: Array<string>, default: []},
+})
 const buttonStatus = ref("Join Queue");    
 const buttonColor = ref("#5FE0B7");
 let cardColor = "#D9D9D9";
@@ -35,8 +36,8 @@ const changeCardColor = (index:number) => {
 }
 
 const getTwoUsers = (index: number) => {
-    let name1: string = (index < queueUsers.value.length) ? queueUsers.value[index] : ""
-    let name2: string = (index+1 < queueUsers.value.length) ? queueUsers.value[index+1] : ""
+    let name1: string = (index < props.queueUsers.length) ? props.queueUsers[index] : ""
+    let name2: string = (index+1 < props.queueUsers.length) ? props.queueUsers[index+1] : ""
     return [name1, name2]
 }
 

@@ -9,7 +9,8 @@ export default defineNuxtConfig({
     ISSUER: '',
     public:{
       PORT_CLIENT_GM: '',
-      PORT_WSS_CONTROLLER_CLIENT: ''
+      PORT_WSS_CONTROLLER_CLIENT: '',
+      PORT_SSE_GM: '',
     }
   },
   devtools: { enabled: true },
