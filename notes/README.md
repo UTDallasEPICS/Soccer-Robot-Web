@@ -62,23 +62,48 @@ Controller authenticates HTTP upgrade and handles checking proper wasd inputs (i
 
 ```mermaid
 flowchart TD
-    start-->NOT_PLAYING
-    a-->SEND_CONFIRM
-    b-->PLAYING
-    c-->RESETTING
-    d-->NOT_PLAYING
+    START-->QueueCheck2
     subgraph NOT_PLAYING
-        a
+        QueueCheck2{Queue.length >= 2}
+        CheckReady{Robots ready}
+        QueueCheck2 -- NO --> QueueCheck2
+        QueueCheck2 -- YES --> CheckReady
+        CheckReady -- NO --> QueueCheck2
     end
+    CheckReady -- YES --> SendConfirm
     subgraph SEND_CONFIRM
-        b
+        SendConfirm[Send confirmation requests]
+        ConfirmationTimer{Confirm time over}
+        CheckConfirm{2 accepts}
+        RemoveDeclined[Remove declined/no response users]
+        SendConfirm --> ConfirmationTimer
+        ConfirmationTimer -- NO --> ConfirmationTimer
+        ConfirmationTimer -- YES --> CheckConfirm
+        CheckConfirm -- NO --> RemoveDeclined
     end
+    RemoveDeclined --> QueueCheck2
+    CheckConfirm -- YES --> ChangeAccessCode
     subgraph PLAYING
-        c
+        ChangeAccessCode[Change Controller access code]
+        ControllerAuthorize[Authorize players]
+        SendMatchStart[Give players Controller access code]
+        RaspMatchStart[Signal Raspberry to start timer and scores]
+        GameOver[Timer == 0]
+        ChangeAccessCode --> ControllerAuthorize
+        ControllerAuthorize --> SendMatchStart
+        SendMatchStart --> RaspMatchStart
+        RaspMatchStart --> GameOver
+        GameOver -- NO --> GameOver
     end
+    GameOver -- YES --> ControllerUnauthorize
     subgraph RESETTING
-        d
+        ControllerUnauthorize[Unauthorize players]
+        StoreMatch[Store match datetime, players, and scores in database]
+        Reset[Reset timer, score, and robot_ready state]
+        ControllerUnauthorize --> StoreMatch
+        StoreMatch --> Reset
     end
+    Reset --> QueueCheck2
 ```
 
 ## Sequence Diagrams
