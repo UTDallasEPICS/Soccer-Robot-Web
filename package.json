@@ -9,8 +9,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "bootgame": "tsx server/Game_Manager/src/index.ts",
-    "bootcontrol": "tsx server/Controller/src/index.ts",
-    "bootrasp": "tsx server/Raspberry/src/index.ts"
+    "bootcontrol": "tsx server/Controller/src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.11.0",

@@ -1,14 +1,12 @@
 <template>
     <div class="">
-        {{ sruser }}
-        <Profile v-if="sruser"></Profile>
-        <LogOut v-if="sruser"></LogOut>
+        <Profile v-if="userTrue"></Profile>
         <LogInSignUp v-else></LogInSignUp>
     </div>
 </template>
 
 <script setup lang="ts">
-    const sruser = useCookie("sruser")
+    const userTrue = ref(false)
 </script>
 
 
