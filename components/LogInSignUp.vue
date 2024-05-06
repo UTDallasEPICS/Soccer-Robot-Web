@@ -3,12 +3,7 @@
         <div class="">
             <button
                 class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 rounded-lg"
-                style="background-color:#154734" @click="openLogIn"> {{ "Log In" }}</button>
-        </div>
-        <div class="">
-            <button
-                class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 mr-5 rounded-lg"
-                style="background-color:#e87500" @click="openSignUp"> {{ "Sign Up" }}</button>
+                style="background-color:#154734" @click="openLogIn">Log In</button>
         </div>
     </div>
     <SignUpOverlay v-if="showSignUp" @closeSignUpOverlay="closeSignUp"></SignUpOverlay>
