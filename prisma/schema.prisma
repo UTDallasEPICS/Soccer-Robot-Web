@@ -8,7 +8,7 @@ generator client {
 }
 
 model Player {
-  id       Int      @id @default(autoincrement())
+  user_id       String      @id
   username String   @unique
   email    String   @unique
   name     String?
@@ -24,8 +24,8 @@ model Match {
 }
 
 model PlayersInMatches {
-  player Player @relation(fields: [playerID], references: [id])
-  playerID Int
+  player Player @relation(fields: [playerID], references: [user_id])
+  playerID String
   playerScore Int
   match Match @relation(fields: [matchID], references: [id])
   matchID Int

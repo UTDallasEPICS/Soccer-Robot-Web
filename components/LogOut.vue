@@ -3,15 +3,13 @@
         <div class="">
             <button
                 class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 rounded-lg"
-                style="background-color:#154734" @click="login"> {{ "Log In" }}</button>
+                style="background-color:#FF0000" @click="logout"> {{ "Log Out" }}</button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-const login = async () => { 
-    window.location.href='api/login'
+const logout = async () => { 
+    window.location.href='api/logout'
  }
 </script>
-
-<style></style>
