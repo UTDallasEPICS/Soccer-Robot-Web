@@ -13,6 +13,7 @@ const prisma = new PrismaClient()
 
 // Environment variables
 dotenv.config({ path: "./.env" })
+const LOCALHOST: string = process.env.LOCALHOST
 const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
 const PORT_GM_RASPBERRY: number = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
 const PORT_CLIENT_GM: number = parseInt(`${process.env.PORT_CLIENT_GM}`)
@@ -66,7 +67,7 @@ const gameCycle = setInterval( async () => {
                 game_state = GAME_STATE.PLAYING
                 CONTROLLER_ACCESS = nanoid() // new access code for each game
                 // tell Controller server to change access code
-                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
+                await fetch(`http://${LOCALHOST}:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/accesspassword`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
@@ -75,7 +76,7 @@ const gameCycle = setInterval( async () => {
                 })
                 console.log(players[0]["username"] + " vs " + players[1]["username"])
                 // authorize players in Controller server to send key inputs
-                await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/addusers`, {
+                await fetch(`http://${LOCALHOST}:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/addusers`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"], "playernumber": 0}, 
@@ -151,7 +152,7 @@ const gameCycle = setInterval( async () => {
     }
     else if(game_state == GAME_STATE.RESETTING){
         // Game end: remove players from authorization in Controller server and clear player array
-        await fetch(`http://localhost:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeusers`, {
+        await fetch(`http://${LOCALHOST}:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/removeusers`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"]}, 
@@ -302,7 +303,7 @@ server_wss_CLIENT_GM.on("upgrade", async (request, socket, head) => {
 })
 
 server_wss_CLIENT_GM.listen(PORT_CLIENT_GM, () => {
-    console.log(`SERVER_WSS_CLIENT_GM is running on http://localhost:${PORT_CLIENT_GM}`)
+    console.log(`SERVER_WSS_CLIENT_GM is running on http://${LOCALHOST}:${PORT_CLIENT_GM}`)
 })
 
 // SECTION: SERVER SENT EVENTS
@@ -312,7 +313,7 @@ app_sse.use(cors())
 const sse_clients: Array<any> = []
 
 app_sse.listen(PORT_SSE_GM, () => {
-    console.log(`SSE is running on http://localhost:${PORT_SSE_GM}`)
+    console.log(`SSE is running on http://${LOCALHOST}:${PORT_SSE_GM}`)
 })
 
 app_sse.get("/", (request, response) => {
@@ -371,10 +372,10 @@ const broadcastScore = setInterval(() => {
 
 // SECTION: WEBSOCKET GAME MANAGER <-> RASPBERRY
 // Make sure to set up Raspberry server first
-const ws_raspberry = new WebSocket(`ws://localhost:${PORT_GM_RASPBERRY}`)
+const ws_raspberry = new WebSocket(`ws://${LOCALHOST}:${PORT_GM_RASPBERRY}`)
 
 ws_raspberry.onopen = (event) => {
-    console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_GM_RASPBERRY}`)
+    console.log(`WS_RASPBERRY CONNECTED ws://${LOCALHOST}:${PORT_GM_RASPBERRY}`)
 }
 
 ws_raspberry.onerror = (error) => {
