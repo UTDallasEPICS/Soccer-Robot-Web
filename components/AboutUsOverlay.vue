@@ -6,7 +6,8 @@
         </div>
         <p class="w-full text-center" style="font-size: 28px; margin-bottom: 1em;">About Us</p>
         <p class="w-full text-center">Team Shawarama along with RL^2 presents to you: Soccer Robots! These fun, interactive robots allow you to play soccer from the comforts of your own phone. Using the WASD keys on your keyboard, you can move your robot to the World Cup!</p>
-        <img src="public/SoccerRobot.webp" alt="Soccer Robot Image" style="display: block; margin: 0 auto; width: 35%; height: auto; margin-top: .75em;">
+        <img src="public/RobotSketch.png" alt="Soccer Robot Image (Credit: Zaaim Rahman)" style="display: block; margin: 0 auto; width: 35%; height: auto; margin-top: .75em;">
+        <p class="w-full text-center">Image credit: Zaaim Rahman (Engineering Team)</p>
       </div>
 </div>
 </template>
