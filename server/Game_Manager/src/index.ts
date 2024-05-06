@@ -102,6 +102,15 @@ const gameCycle = setInterval( async () => {
                 }))
             }
             else{ // did not get 2 accepts
+                // signal players to reset confirmation 
+                queue[0]["ws"].send(JSON.stringify({
+                    "type": "MATCH_CONFIRMATION_RESET",
+                    "payload": ""
+                }))
+                queue[1]["ws"].send(JSON.stringify({
+                    "type": "MATCH_CONFIRMATION_RESET",
+                    "payload": ""
+                }))
                 // find the player(s) that declined/did not respond and remove from queue/close ws connection
                 // index of user queue[0] in players array
                 const indexA: number = players.findIndex((element) => { return element["username"] === queue[0]["username"]})
@@ -206,7 +215,7 @@ wss_client_gm.on("connection", (ws: any, request: IncomingMessage, username: str
         }
         else if(type === "LEAVE_QUEUE"){
             const index = queue.findIndex((element) => { return element["username"] === username })
-            if(index != -1){
+            if(index != -1 && !(game_state === GAME_STATE.SEND_CONFIRM && (index == 0 || index == 1))){
                 console.log("REMOVING " + queue[index]["username"])
                 queue.splice(index, 1)
             }
