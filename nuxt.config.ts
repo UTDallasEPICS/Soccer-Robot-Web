@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     BASEURL: '',
     ISSUER: '',
     public:{
+      LOCALHOST: '',
       PORT_CLIENT_GM: '',
       PORT_WSS_CONTROLLER_CLIENT: '',
       PORT_SSE_GM: '',

@@ -7,6 +7,7 @@ import dotenv from "dotenv"
 
 // Environment variables
 dotenv.config({ path: "./.env" })
+const LOCALHOST: string = process.env.LOCALHOST ?? "localhost"
 const PORT_SERVER: number = parseInt(`${process.env.PORT_EXPRESS_CONTROLLER_GAMEMANAGER}`)
 const PORT_WSS_CLIENT: number = parseInt(`${process.env.PORT_WSS_CONTROLLER_CLIENT}`)
 const PORT_WSS_RASPBERRY: number = parseInt(`${process.env.PORT_WSS_CONTROLLER_RASPBERRY}`)
@@ -24,10 +25,10 @@ const printCurrentUsers = () => {
 
 // WEBSOCKET RASPBERRY
 // Make sure to set up Raspberry server first
-const ws_raspberry = new WebSocket(`ws://localhost:${PORT_WSS_RASPBERRY}`)
+const ws_raspberry = new WebSocket(`ws://${LOCALHOST}:${PORT_WSS_RASPBERRY}`)
 
 ws_raspberry.onopen = (event) => {
-    console.log(`WS_RASPBERRY CONNECTED ws://localhost:${PORT_WSS_RASPBERRY}`)
+    console.log(`WS_RASPBERRY CONNECTED ws://${LOCALHOST}:${PORT_WSS_RASPBERRY}`)
 }
 
 ws_raspberry.onerror = (error) => {
@@ -43,7 +44,7 @@ const app = express()
 app.use(express.json())
 
 app.listen(PORT_SERVER, () => {
-    console.log(`Express Server is running on http://localhost:${PORT_SERVER}`);
+    console.log(`Express Server is running on http://${LOCALHOST}:${PORT_SERVER}`);
 })
 
 app.post("/accesspassword", (request, response) => {
@@ -228,5 +229,5 @@ server.on("upgrade", async (request, socket, head) => {
 })
 
 server.listen(PORT_WSS_CLIENT, () => {
-    console.log(`SERVER is running on http://localhost:${PORT_WSS_CLIENT}`)
+    console.log(`SERVER is running on http://${LOCALHOST}:${PORT_WSS_CLIENT}`)
 })

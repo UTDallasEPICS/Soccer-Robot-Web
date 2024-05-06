@@ -31,7 +31,7 @@ const player1 = ref<{score: number, username: string}>()
 const player2 = ref<{score: number, username: string}>()
 
 const joinQueue = () => {
-    ws_queue.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_CLIENT_GM}`)
+    ws_queue.value = new WebSocket(`ws://${useRuntimeConfig().public.LOCALHOST}:${useRuntimeConfig().public.PORT_CLIENT_GM}`)
     ws_queue.value.onerror = (event) => {
         console.log("Error: " + event)
         return
@@ -53,7 +53,7 @@ const joinQueue = () => {
             confirmationRequest.value = false
             accesspassword.value = payload
             document.cookie = "accesspassword=" + accesspassword.value
-            ws_controller.value = new WebSocket(`ws://localhost:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
+            ws_controller.value = new WebSocket(`ws://${useRuntimeConfig().public.LOCALHOST}:${useRuntimeConfig().public.PORT_WSS_CONTROLLER_CLIENT}`)
             ws_controller.value.onopen = (event) => {
                 const wasdMapping: { [key: string]: number, "w": number, "a": number, "s": number, "d": number } = {"w": 0, "a": 0, "s": 0, "d": 0} 
                 const updateKeyUp = (event: KeyboardEvent) => {
@@ -116,7 +116,7 @@ const confirmMatch = (accepted: boolean) => {
 }
 
 if(process.client){
-    sse.value = new EventSource(`http://localhost:${useRuntimeConfig().public.PORT_SSE_GM}/sse-info`)
+    sse.value = new EventSource(`http://${useRuntimeConfig().public.LOCALHOST}:${useRuntimeConfig().public.PORT_SSE_GM}/sse-info`)
     sse.value.addEventListener("message", (message: any) => {
         const data = JSON.parse(message.data)
         const type = data["type"]
