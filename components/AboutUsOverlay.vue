@@ -1,19 +1,21 @@
 <template>
-<div class="fixed w-full h-full inset-0 bg-black bg-opacity-80 flex" style="z-index: 2;">
-    <div class="rounded-lg p-2 bg-white" style="width: 500px; height: 400px; margin: auto;">
+<div class="fixed w-full h-full inset-0 bg-black bg-opacity-80 flex" style="z-index: 2">
+      <div class="rounded-lg p-2 bg-white" style="width: 500px; height: 400px; margin: auto;">
         <div class="w-min h-min text-black" style="margin-left: auto;">
-            <p class="cursor-pointer" @click="emitClose">X</p>
+          <p @click="emitClose" class="cursor-pointer">X</p>
         </div>
-        <p class="w-full text-center">About Us</p>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia numquam atque sed dolorem laudantium minus ullam totam voluptatem hic doloremque aut temporibus impedit distinctio architecto eveniet quos sit ducimus, veniam tenetur qui consequuntur accusamus dolore consectetur. Atque mollitia quaerat deleniti rerum aliquid suscipit nulla facere quia pariatur at autem dolorem officia eius rem ea delectus non veniam facilis hic, doloribus, nisi dolor dicta illo iure. Dolorum ut expedita recusandae distinctio commodi nam accusantium. Accusamus eius repellendus distinctio at dolore ducimus? Natus, at vel? Quaerat, at, nemo repudiandae labore itaque dolorem provident sequi voluptatum nostrum quasi facere cum asperiores deleniti quisquam?</p>
-    </div>
+        <p class="w-full text-center" style="font-size: 28px; margin-bottom: 1em;">About Us</p>
+        <p class="w-full text-center">Team Shawarama along with RL^2 presents to you: Soccer Robots! These fun, interactive robots allow you to play soccer from the comforts of your own phone. Using the WASD keys on your keyboard, you can move your robot to the World Cup!</p>
+        <img src="public/RobotSketch.png" alt="Soccer Robot Image (Credit: Zaaim Rahman)" style="display: block; margin: 0 auto; width: 35%; height: auto; margin-top: .75em;">
+        <p class="w-full text-center">Image credit: Zaaim Rahman (Engineering Team)</p>
+      </div>
 </div>
-
 </template>
-
-<script setup lang="ts">
-const emit = defineEmits(['closeAboutUsOverlay'])
-const emitClose = () => {
-    emit('closeAboutUsOverlay')
-}
-</script>
+  
+  <script setup lang="ts">
+  const emit = defineEmits(['closeAboutUsOverlay'])
+  const emitClose = () => {
+      emit('closeAboutUsOverlay')
+  }
+  </script>
+  
