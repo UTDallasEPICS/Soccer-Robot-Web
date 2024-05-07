@@ -134,6 +134,13 @@ http://localhost:PORT/api/logoutcallback
 http://localhost:PORT/
 ```
 
+Get the signing certificate from the Auth0 application and create a root-level cert-dev.pem containing the certificate.
+```bash
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+```
+
 ### Initialize .env variables
 
 Look at **.env.example** for reference. Create an .env file in the root directory filled out with needed information.
