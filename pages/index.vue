@@ -15,9 +15,14 @@
             <ConfirmMatchOverlay v-if="confirmationRequest" @confirm-response="confirmMatch"/>
         </div>
     </div>
+    <LogInOverlay v-if="showLogIn" @closeLogInOverlay="closeLogIn"></LogInOverlay>
 </template>
 
 <script setup lang="ts">
+const showLogIn = ref(true)
+const openLogIn = () => { showLogIn.value = true }
+const closeLogIn = () => { showLogIn.value = false }
+
 const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()
 const confirmationRequest = ref(false)
