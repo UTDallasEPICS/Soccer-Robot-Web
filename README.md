@@ -32,37 +32,53 @@ Soccer Robots is an interactive live-fed soccer game between two robots where pl
 
 Our project not only caters to the entertainment needs of our users but also serves as a captivating demonstration of UTDesign's capabilities!
 
+### Users/Roles
+
+#### Guest
+
+- can watch the game
+
+#### Registered User
+
+- can watch the game
+- join/leave/confirm queue
+- can play the game (wasd inputs)
+
 ## Functional Requirements
 
 ### Website
 
-- Homepage with spectator view, player view
-- Register an account
-- Login System
-- How to play section
-  - Include a contact email for assistance
-- Game Information (Match status, score, timer, who is playing, who is in queue)
-- Video feed (one camera, probably bird-eye view)
+- The website shall display a game livestream in under 10 second latency
+- The website shall display a timer/scoreboard for the current match, showing the usernames of the players as well as their respective scores
+- The website shall display the game queue
+- The website shall display additional information such as About Us, How to Play, and Help
+- The user shall be able to login and logout through Auth0
+- Newly registered users shall be able choose a unique username (2-15 characters, alphanumeric except for dashes ```-``` and underscores ```_```)
 
-### Game
+### Queue System
 
-- Queue system (join queue, leave queue)
-  - 1v1
-- Display timer (time is based on settings)
-- Display score
-- Display players
-- Map user input to control actions (that the engineering team makes)
-- Work with the engineering team to recharge robots before a game
+- Logged in users shall be able to click on a “Join Queue” button to enter the queue
+- Users in the queue shall be able to click on a “Leave Queue” button to leave the queue
+- The queue shall not allow duplicate users in the queue
+- The queue shall display multiple upcoming matches by placing later matches below earlier matches
+- When a match is done and there are at least two players in the queue, the system shall send a confirmation popup to the next two players in the queue with the option to “Accept” or “Decline”
+  - In a confirmation popup, the player shall be able to click “Accept” within 10 seconds to agree to join the match
+  - When both players of a confirmation popup click “Accept”, both players shall be able to enter a soccer robot match and each control a robot
+  - In a confirmation popup, the player shall be able to click “Decline” within 10 seconds to refuse to join the match and leave the queue
+  - In a confirmation popup, the system shall kick a player from the queue if the player does not click either “Accept” or “Decline” within 10 seconds
+
+### Soccer Robot Game and Sending Signals
+
+- The system shall be able to check whether the robots are in a "ready" state (as communicated by the Engineering team)
+- A player who is entered into the soccer robot match shall be authorized and able to control one of the soccer robots for the duration of the match using WASD keys
+- The system shall be able to receive “goal score” signals and update the current scoreboard accordingly
+- Upon game completion, control of the soccer robots shall be revoked from the completed game’s players
+- Upon game completion, the system shall reset the scoreboard scores to 0 and timer to its initial value
 
 ### Data Storage
 
-- Account information (email, country (default US), unique username)
-- Match information (Players, match results)
-
-### Admin View
-
-- Set settings in timer
-- See statistics
+- The system shall store, for each user, a unique username and email address
+- The system shall store, for each completed match, the two players who played in the match, the final score of each player, and the datetime of the match
 
 ## Third Party Integrations
 
@@ -98,7 +114,7 @@ npm install
 
 ### Set up Auth0
 
-In the Auth0 application dashboard, configure the following with the appropriate port. The slashes ```/``` are very important. If using a different host than **localhost**, change **localhost** value accordingly.
+In the Auth0 application dashboard, configure the following with the appropriate port. Nuxt default port is 3000. The slashes ```/``` are very important. If using a different host than **localhost**, change **localhost** value accordingly.
 
 - Allowed Callback URLs
 
@@ -192,3 +208,7 @@ tsx is used to run Typescript files
 
 - <https://mermaid.js.org/>
 - See ./notes
+
+#### Documentation
+
+See ./notes, ./figma
