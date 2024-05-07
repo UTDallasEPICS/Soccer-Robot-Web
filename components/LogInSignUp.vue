@@ -3,13 +3,13 @@
         <div class="">
             <button
                 class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 rounded-lg"
-                style="background-color:#154734" @click="sendRedirect">Log In</button>
+                style="background-color:#154734" @click="login">Log In</button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-const sendRedirect = async () => { window.location.href = 'api/login' }
+const login = async () => { window.location.href = 'api/login' }
 </script>
 
 <style></style>
