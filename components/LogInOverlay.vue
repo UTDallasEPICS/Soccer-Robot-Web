@@ -1,9 +1,6 @@
 <template>
 <div class="fixed w-full h-full inset-0 backdrop-blur bg-black bg-opacity-25 flex" style="z-index: 2;">
-    <div class="rounded-lg p-2 bg-white border-black border-2" style="margin: auto; width: 35%; height: 75%;">
-        <div class="w-min h-min text-black" style="margin-left: auto;">
-            <p class="cursor-pointer" @click="emitClose" style="color: black; font-size: 24px;">X</p>
-        </div>
+    <div class="rounded-lg p-2 bg-white border-black border-2" style="margin: auto; width: 35%; height: 75%;"> 
         <p class="text-black font-black text-lg text-center" style="font-family: Inter; color: #154734; margin-top: 10%; margin-bottom: 3%;">Set Username</p>
         <form @submit.prevent="handleSubmit">
             <label class="font-semibold text-lg block" style="font-family: Inter; color: #777070;margin-left:14.5%; letter-spacing: 1.5px;">USERNAME</label>

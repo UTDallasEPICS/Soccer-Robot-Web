@@ -15,13 +15,17 @@
             <ConfirmMatchOverlay v-if="confirmationRequest" @confirm-response="confirmMatch"/>
         </div>
     </div>
-    <LogInOverlay v-if="showLogIn" @closeLogInOverlay="closeLogIn"></LogInOverlay>
+    <LogInOverlay v-if="userNotRegistered"></LogInOverlay>
 </template>
 
 <script setup lang="ts">
-const showLogIn = ref(false)
-const openLogIn = () => { showLogIn.value = true }
-const closeLogIn = () => { showLogIn.value = false }
+const userNotRegistered = ref(false)
+const srtoken = useCookie('srtoken')
+const sruser = useCookie('sruser')
+
+if(srtoken.value != '' && sruser.value == ''){
+    userNotRegistered.value = true
+}
 
 const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()

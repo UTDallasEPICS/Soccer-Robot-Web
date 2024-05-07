@@ -20,9 +20,9 @@ export default defineEventHandler(async event => {
           }
         })
         if(player){
-          setCookie(event, 'sruser', 't')
+          setCookie(event, 'sruser', player.username)
         } else {
-          setCookie(event, 'sruser', 'f')
+          setCookie(event, 'sruser', '')
         }
       }
     } catch (error) {
@@ -31,7 +31,7 @@ export default defineEventHandler(async event => {
       return await sendRedirect(event, loginRedirectUrl())
     }
   } else {
-    setCookie(event, 'sruser', 'f')
+    setCookie(event, 'sruser', '')
     setCookie(event, 'srtoken', '')
   }
 })

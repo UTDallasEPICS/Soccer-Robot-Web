@@ -7,6 +7,12 @@
 
 <script setup lang="ts">
     const userTrue = ref(false)
+    const srtoken = useCookie('srtoken')
+    if(srtoken.value == ''){
+        userTrue.value = false
+    } else {
+        userTrue.value = true
+    }
 </script>
 
 
