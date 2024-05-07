@@ -15,9 +15,24 @@
 
 ## Conceptual Overview
 
-## Functional Requirements
+The Jonsson School UTDesign program serves students from UTDesign Capstone, EPICS, Makerspace and Startup. Our partner is Tim Givens, the UTDesign Studio Assistant Manager, who has the following mission:
 
-For this semester, implement a website for the UTDesign Soccer Robots, map controls, and store data
+*To bring UTD to the forefront of robotics competitions while collaborating with local high schools to get more kids engaged in robotics and STEM.*
+
+Soccer Robots is an interactive live-fed soccer game between two robots where players can control their robots remotely over the internet. The Soccer Robots team is split into CS and Engineering teams. We are Soccer Robots CS, tasked with
+
+- Handle serving webpage
+- Handle user accounts through Auth0
+- Integrate Twitch livestream
+- Display game information such as time and scoreboard
+- Implement queue system
+- Set up and record matches
+- Forward wasd inputs from players to Engineering team (Raspberry server)
+- Communicate with Engineering team for robots' status
+
+Our project not only caters to the entertainment needs of our users but also serves as a captivating demonstration of UTDesign's capabilities!
+
+## Functional Requirements
 
 ### Website
 
