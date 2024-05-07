@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-const showLogIn = ref(true)
+const showLogIn = ref(false)
 const openLogIn = () => { showLogIn.value = true }
 const closeLogIn = () => { showLogIn.value = false }
 
