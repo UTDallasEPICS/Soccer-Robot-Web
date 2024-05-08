@@ -8,7 +8,7 @@ generator client {
 }
 
 model Player {
-  user_id       String   @id
+  user_id  String   @id@unique
   username String   @unique
   email    String   @unique
 
