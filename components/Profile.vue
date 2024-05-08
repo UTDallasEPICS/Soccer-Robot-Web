@@ -1,17 +1,29 @@
 <template>
     <div class="flex md:flex md:flex-grow flex-row-reverse space-x-3 space-x-reverse mt-5 mr-5 mb-2">
+        <div>
+            <div class="">
+            <button
+                class="hover:text-gray-300 transition font-semibold duration-400 text-white font-bold py-2 px-5 rounded-lg"
+                style="background-color:#FF0000" @click="logout"> {{ "Log Out" }}</button>
+            </div>
+        </div>
         <div class="profileTemp">
             <img src="../public/Profile.svg">
         </div>
         <div class="mt-1">
-            <p>{{ userName }}</p>
+            <p>{{ username }}</p>
         </div>
     </div>
 
 </template>
 
-<script>
-    const userName = ref('louis')
+<script setup lang="ts">
+    const getUser = useCookie('sruser')
+    let username = getUser.value
+
+    const logout = async () => { 
+        window.location.href='api/logout'
+    }
 </script>
 
 <style setup lang="ts">
