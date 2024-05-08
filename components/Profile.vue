@@ -4,14 +4,15 @@
             <img src="../public/Profile.svg">
         </div>
         <div class="mt-1">
-            <p>{{ userName }}</p>
+            <p>{{ username }}</p>
         </div>
     </div>
 
 </template>
 
-<script>
-    const userName = ref('louis')
+<script setup lang="ts">
+    const getUser = useCookie('sruser')
+    let username = getUser.value
 </script>
 
 <style setup lang="ts">

@@ -11,7 +11,7 @@ export default defineEventHandler(async event => {
   if(srtoken){
     try {
       const claims:any = jwt.verify(srtoken, fs.readFileSync(process.cwd() + '/cert-dev.pem'))
-      if(claims){
+      if(claims instanceof Object && "nonce" in claims){
         event.context.claims = claims
         const id = claims['sub']
         const player = await prisma.player.findUnique({

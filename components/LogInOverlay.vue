@@ -14,8 +14,16 @@
 
 <script setup lang="ts">
 const username = ref("")
-const handleSubmit = () => {
-    console.log(username.value)
+const handleSubmit = async () => {
+    if(username.value.length >= 3 && username.value.length <= 15){
+        const req:string = await $fetch('api/user', {
+            method: 'post',
+            body: {
+                username: username.value
+            }
+        })
+        console.log(parseInt(req))
+    }
 }
 const emit = defineEmits(['closeLogInOverlay'])
 const emitClose = () => {
