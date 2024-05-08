@@ -10,20 +10,18 @@ export default defineEventHandler(async (event) => {
   })
   
   let msg
-  //console.log(existingUsername.user_id)
-  if(!existingUsername.username){
+  if(!existingUsername){
      const player = await prisma.player.create({
       data: {
         user_id: claims['sub'],
         username,
         email: claims['email']
-      }
-      
+      } 
     })
     msg = 200
+    setCookie(event, 'sruser', username)
   } else {
     msg = 403
-    console.log('hello2')
   }
 
   return msg

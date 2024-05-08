@@ -3,6 +3,7 @@
         <Profile v-if="userTrue"></Profile>
         <LogInSignUp v-else></LogInSignUp>
     </div>
+    <LogInOverlay v-if="showLogIn" @closeLogIn="closing"></LogInOverlay>
 </template>
 
 <script setup lang="ts">
@@ -13,6 +14,17 @@
     } else {
         userTrue.value = true
     }
+    const showLogIn = ref(false)
+    const sruser = useCookie('sruser')
+
+    if(srtoken.value != '' && sruser.value == ''){
+        showLogIn.value = true
+    }
+
+    const closing = () => {
+        showLogIn.value = false
+    }
+
 </script>
 
 
