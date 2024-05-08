@@ -23,9 +23,6 @@ CREATE TABLE "PlayersInMatches" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Player_user_id_key" ON "Player"("user_id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Player_username_key" ON "Player"("username");
 
 -- CreateIndex

@@ -26,6 +26,7 @@ const handleSubmit = async () => {
         })
         if(parseInt(req) == 200){
             emitClose()
+            reloadNuxtApp()
         } else{
             mssg.value = "Username already exists"
         }

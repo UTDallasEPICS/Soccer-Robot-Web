@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const username = body.username
   const existingUsername = await prisma.player.findFirst({
     where: {
-      user_id: claims['sub']
+      username
     }
   })
   

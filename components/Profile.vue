@@ -20,7 +20,7 @@
 <script setup lang="ts">
     const getUser = useCookie('sruser')
     let username = getUser.value
-    
+
     const logout = async () => { 
         window.location.href='api/logout'
     }

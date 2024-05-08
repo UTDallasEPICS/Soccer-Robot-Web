@@ -9,9 +9,7 @@
 <script setup lang="ts">
     const userTrue = ref(false)
     const srtoken = useCookie('srtoken')
-    if(srtoken.value == ''){
-        userTrue.value = false
-    } else {
+    if(srtoken.value){
         userTrue.value = true
     }
     const showLogIn = ref(false)
@@ -23,6 +21,7 @@
 
     const closing = () => {
         showLogIn.value = false
+        userTrue.value = true
     }
 
 </script>
