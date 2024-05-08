@@ -13,7 +13,7 @@ const prisma = new PrismaClient()
 
 // Environment variables
 dotenv.config({ path: "./.env" })
-const LOCALHOST: string = process.env.LOCALHOST
+const LOCALHOST: string = process.env.LOCALHOST ?? "localhost"
 const PORT_SSE_GM: number = parseInt(`${process.env.PORT_SSE_GM}`)
 const PORT_GM_RASPBERRY: number = parseInt(`${process.env.PORT_GM_RASPBERRY}`)
 const PORT_CLIENT_GM: number = parseInt(`${process.env.PORT_CLIENT_GM}`)
@@ -25,8 +25,9 @@ const players: Array<{username: string, user_id: string, ws: any, accepted: bool
 let CONFIRMATION_PASSWORD: string = "sousounofrieren" // "Tearful goodbyes aren’t our style. It’d be embarrassing when we meet again"
 let CONTROLLER_ACCESS: string = "donutvampire" // the initial value does not do anything here
 let timer: number = 0
-const timer_duration: number = 30 // this is the initial timer duration, in seconds
+const timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
+const confirmation_timer_duration: number = parseInt(`${process.env.CONFIRMATION_TIMER_DURATION}`) // this is the time given to players to confirm, in seconds
 let score1: number = 0
 let score2: number = 0
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
@@ -49,7 +50,7 @@ const gameCycle = setInterval( async () => {
                     "type": "MATCH_CONFIRMATION",
                     "payload": CONFIRMATION_PASSWORD
                 }))
-                confirmation_timer = 10 // 10 seconds to confirm
+                confirmation_timer = confirmation_timer_duration
             }
             else{ // ask if robots are ready to play
                 ws_raspberry.send(JSON.stringify({

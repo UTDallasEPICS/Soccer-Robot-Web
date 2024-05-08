@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     BASEURL: '',
     ISSUER: '',
     public:{
+      CONFIRMATION_TIMER_DURATION: '',
       LOCALHOST: '',
       PORT_CLIENT_GM: '',
       PORT_WSS_CONTROLLER_CLIENT: '',

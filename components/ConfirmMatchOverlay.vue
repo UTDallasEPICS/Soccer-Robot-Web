@@ -16,7 +16,7 @@
 <script setup lang="ts">
 const emit = defineEmits(['confirm-response'])
 const updateDelayms: number = 500
-const confirmationTime: number = 10 // in seconds
+const confirmationTime: number = parseInt(useRuntimeConfig().public.CONFIRMATION_TIMER_DURATION) // in seconds
 const confirmationTicks: number = confirmationTime * (1000 / updateDelayms)
 let confirmationTicksLeft: number = confirmationTicks
 const progress = ref<number>(0)
