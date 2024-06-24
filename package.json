@@ -19,7 +19,7 @@
     "nanoid": "^5.0.7",
     "nuxt": "^3.10.2",
     "vue": "^3.4.19",
-    "vue-router": "^4.2.5",
+    "vue-router": "^4.4.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {
