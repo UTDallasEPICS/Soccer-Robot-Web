@@ -5,6 +5,10 @@ import jwt from "jsonwebtoken"
 import fs from "fs"
 import dotenv from "dotenv"
 
+interface JwtPayloadWithRole extends jwt.JwtPayload {
+    role?: string;
+  }
+  
 // Environment variables
 dotenv.config({ path: "./.env" })
 const LOCALHOST: string = process.env.LOCALHOST ?? "localhost"
@@ -134,6 +138,25 @@ app.post("/removeusers", (request, response) => {
     })
     response.status(status).end()
 })
+
+app.post("/admin/shutdownrobot", (request, response) => {
+    const role = request.headers.role
+
+    // Check if the user has an 'admin' role
+    if (role !== "admin") {
+        return response.status(403).json({ message: "Unauthorized" });
+    }
+    
+    // If admin, send shutdown command to Raspberry Pi
+    ws_raspberry.send(JSON.stringify({
+        "type": "ADMIN_INPUT",
+        "payload": {
+            "type": "ROBOT_SHUTDOWN",
+        }
+    }))
+    response.status(200).send("Robot shutdown command sent!");
+});
+
 
 // SECTION: WEBSOCKET SERVER: CLIENT -> CONTROLLER
 const server = createServer()

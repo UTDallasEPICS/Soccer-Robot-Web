@@ -11,6 +11,7 @@ model Player {
   user_id  String   @id
   username String   @unique
   email    String   @unique
+  role     String   @default("Player")
 
   matches PlayersInMatches[]
 }
