@@ -1,3 +1,4 @@
+
 datasource db {
   provider = "sqlite"
   url      = env("PRISMA_DB_URL")
@@ -7,26 +8,34 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
 model Player {
-  user_id  String   @id
-  username String   @unique
-  email    String   @unique
+  user_id  String @id
+  username String @unique
+  email    String @unique
+  wins     Int @default(0)
+  goals    Int @default(0)
+  games    Int @default(0)
 
   matches PlayersInMatches[]
 }
 
 model Match {
-  id          Int       @id @default(autoincrement())
-  datetime    DateTime  @default(now()) 
+  id       Int      @id @default(autoincrement())
+  datetime DateTime @default(now())
 
   players PlayersInMatches[]
 }
 
 model PlayersInMatches {
-  player Player @relation(fields: [playerID], references: [user_id])
-  playerID String
+  player      Player @relation(fields: [playerID], references: [user_id])
+  playerID    String
   playerScore Int
-  match Match @relation(fields: [matchID], references: [id])
-  matchID Int
+  match       Match  @relation(fields: [matchID], references: [id])
+  matchID     Int
+
   @@id([playerID, matchID])
 }
