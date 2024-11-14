@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken"
 import fs from "fs"
 import { PrismaClient } from "@prisma/client"
 import { nanoid } from "nanoid"
+import type {Player as PlayerType} from "@prisma/client" 
+
 
 const prisma = new PrismaClient()
 
@@ -163,21 +165,86 @@ const gameCycle = setInterval( async () => {
         await prisma.match.create({
             data: {
                 datetime: new Date(),
+
+
                 // these are the players who played and their scores
                 players: {
                     create: [
                         {
                             playerID: players[0]["user_id"],
                             playerScore: score1
+                            
+
                         },
                         {
                             playerID: players[1]["user_id"],
                             playerScore: score2
                         }
                     ]
+
+
                 }
             }
         })
+
+       const [player1, player2]  = await prisma.$transaction([
+        prisma.player.findFirst({
+            where: {user_id: players[1]["user_id"]}
+        }),
+        prisma.player.findFirst({
+            where: {user_id: players[2]["user_id"]}
+        })
+        ]) 
+
+        // changes database values based on which player wins
+        if(score1 > score2){
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        wins: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ((player1 as PlayerType).wins + 1) / (player1 as PlayerType).losses
+                    }
+                    
+                }),
+
+                prisma.player.update({
+                    where: {user_id: players[2]["user_id"]},
+                    data: {
+                        losses: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ((player2 as PlayerType).wins) / ((player2 as PlayerType).losses + 1)
+                    }
+                    
+                })
+            ])
+        }
+        else{
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        losses: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ((player1 as PlayerType).wins) / ((player1 as PlayerType).losses + 1)
+                    }
+                    
+                }),
+
+                prisma.player.update({
+                    where: {user_id: players[2]["user_id"]},
+                    data: {
+                        wins: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses)
+                    }
+                    
+                })
+            ])
+        }
+        
+
         players.splice(0, 2)
         robots_ready = false
         timer = 0

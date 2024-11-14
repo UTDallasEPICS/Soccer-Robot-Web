@@ -19,7 +19,8 @@ model Player {
   wins     Int @default(0)
   goals    Int @default(0)
   games    Int @default(0)
-
+  losses   Int @default(0)
+  ratio    Float? 
   matches PlayersInMatches[]
 }
 
