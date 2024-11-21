@@ -122,6 +122,7 @@ const leaveQueue = () => {
 }
 
 const confirmMatch = (accepted: boolean) => {
+    console.log("accepted used")
     if(ws_queue.value?.OPEN){
         ws_queue.value.send(JSON.stringify({
             type: "CONFIRMATION",

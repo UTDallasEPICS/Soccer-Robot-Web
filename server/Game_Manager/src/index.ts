@@ -30,11 +30,11 @@ let timer: number = 0
 const timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 const confirmation_timer_duration: number = parseInt(`${process.env.CONFIRMATION_TIMER_DURATION}`) // this is the time given to players to confirm, in seconds
-let score1: number = 0
-let score2: number = 0
+let score1: number = 10
+let score2: number = 2
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
-let robots_ready: boolean = false
+let robots_ready: boolean = true
 
 // SECTION: GAME CYCLES
 const gameCycle = setInterval( async () => {
@@ -161,6 +161,7 @@ const gameCycle = setInterval( async () => {
             body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"]}, 
                                     {"user_id": players[1]["user_id"]}] })
         })
+
         // store played match in database
         await prisma.match.create({
             data: {
@@ -174,7 +175,6 @@ const gameCycle = setInterval( async () => {
                             playerID: players[0]["user_id"],
                             playerScore: score1
                             
-
                         },
                         {
                             playerID: players[1]["user_id"],
@@ -204,7 +204,8 @@ const gameCycle = setInterval( async () => {
                     data: {
                         wins: {increment: 1},
                         games: {increment: 1},
-                        ratio: ((player1 as PlayerType).wins + 1) / (player1 as PlayerType).losses
+                        ratio: ((player1 as PlayerType).wins + 1) / (player1 as PlayerType).losses,
+                        goals: {increment: score1}
                     }
                     
                 }),
@@ -214,7 +215,9 @@ const gameCycle = setInterval( async () => {
                     data: {
                         losses: {increment: 1},
                         games: {increment: 1},
-                        ratio: ((player2 as PlayerType).wins) / ((player2 as PlayerType).losses + 1)
+                        ratio: ((player2 as PlayerType).wins) / ((player2 as PlayerType).losses + 1),
+                        goals: {increment: score2}
+
                     }
                     
                 })
@@ -227,7 +230,9 @@ const gameCycle = setInterval( async () => {
                     data: {
                         losses: {increment: 1},
                         games: {increment: 1},
-                        ratio: ((player1 as PlayerType).wins) / ((player1 as PlayerType).losses + 1)
+                        ratio: ((player1 as PlayerType).wins) / ((player1 as PlayerType).losses + 1),
+                        goals: {increment: score1}
+
                     }
                     
                 }),
@@ -237,7 +242,9 @@ const gameCycle = setInterval( async () => {
                     data: {
                         wins: {increment: 1},
                         games: {increment: 1},
-                        ratio: ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses)
+                        ratio: ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses),
+                        goals: {increment: score2}
+
                     }
                     
                 })
