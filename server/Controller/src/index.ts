@@ -4,6 +4,8 @@ import { createServer, IncomingMessage } from "http"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 import dotenv from "dotenv"
+import cors from 'cors';
+
 
 interface JwtPayloadWithRole extends jwt.JwtPayload {
     role?: string;
@@ -46,6 +48,18 @@ ws_raspberry.onclose = (event) => {
 // THIS IS A PRIVATE PORT
 const app = express()
 app.use(express.json())
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: '*'
+}));
+
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, role');
+    res.sendStatus(200);
+});
 
 app.listen(PORT_SERVER, () => {
     console.log(`Express Server is running on http://${LOCALHOST}:${PORT_SERVER}`);
@@ -139,7 +153,7 @@ app.post("/removeusers", (request, response) => {
     response.status(status).end()
 })
 
-app.post("/admin/shutdownrobot", (request, response) => {
+app.post("/shutdownrobot", (request, response) => {
     const role = request.headers.role
 
     // Check if the user has an 'admin' role
@@ -155,6 +169,25 @@ app.post("/admin/shutdownrobot", (request, response) => {
         }
     }))
     response.status(200).send("Robot shutdown command sent!");
+});
+
+app.post("/editMatchSettings", (request, response) => {
+    const role = request.headers.role;
+    const { numPlayers, matchTime } = request.body;
+
+    if (role !== "admin") {
+        return response.status(403).json({ message: "Unauthorized" });
+    }
+
+    ws_raspberry.send(JSON.stringify({
+        "type": "ADMIN_INPUT",
+        "payload": {
+            "numPlayers": `${numPlayers}`,
+            "matchTime": `${matchTime}`,
+        }
+    }))
+
+    response.status(200).json({ message: "Match settings updated successfully."});
 });
 
 
