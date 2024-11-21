@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken"
 import fs from 'fs'
 import { loginRedirectUrl } from "../api/auth0"
 import { PrismaClient } from "@prisma/client"
+import { userStore } from "~/stores/user";
 
 const prisma = new PrismaClient()
 
@@ -19,9 +20,13 @@ export default defineEventHandler(async event => {
             user_id: id
           }
         })
+        const store = userStore()
         if(player){
-          setCookie(event, 'sruser', player.username)
+          store.set(player.username)
+          // console.log(store.name)
+          setCookie(event, 'sruser', JSON.stringify({username: player.username, user_id: player.user_id}))
         } else {
+          store.set("")
           setCookie(event, 'sruser', '')
         }
       }

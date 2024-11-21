@@ -51,6 +51,12 @@ const gameCycle = setInterval( async () => {
                     "payload": CONFIRMATION_PASSWORD
                 }))
                 confirmation_timer = confirmation_timer_duration
+                let elapsed = new Date().getTime()
+                let startTime = elapsed + 40
+                ws_raspberry.send(JSON.stringify({
+                    "type": "START_TIME",
+                    "payload": startTime
+                }))
             }
             else{ // ask if robots are ready to play
                 ws_raspberry.send(JSON.stringify({

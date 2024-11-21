@@ -1,8 +1,14 @@
+
+//
+
 export default defineEventHandler(async (event) => {
+
   const prisma = event.context.prisma
   const claims = event.context.claims
+
   const body = await readBody(event)
   const username = body.username
+
   const existingUsername = await prisma.player.findFirst({
     where: {
       username
@@ -11,12 +17,13 @@ export default defineEventHandler(async (event) => {
   
   let msg
   if(!existingUsername){
-     const player = await prisma.player.create({
-      data: {
+     const player = await prisma.player.update({
+      where: {
         user_id: claims['sub'],
+      },
+      data: {
         username,
-        email: claims['email']
-      } 
+      }
     })
     msg = 200
     setCookie(event, 'sruser', username)

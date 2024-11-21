@@ -31,8 +31,6 @@ const closing = () => {
     showLogIn.value = false
 }
 
-
-
 const ws_queue = ref<WebSocket>()
 const ws_controller = ref<WebSocket>()
 const confirmationRequest = ref(false)

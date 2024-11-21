@@ -4,8 +4,8 @@
         <p class="text-black font-black text-lg text-center" style="font-family: Inter; color: #154734; margin-top: 10%; margin-bottom: 3%;">Set Username</p>
         <form @submit.prevent="handleSubmit">
             <label class="font-semibold text-lg block" style="font-family: Inter; color: #777070;margin-left:14.5%; letter-spacing: 1.5px;">USERNAME</label>
-            <p class="text-red-600">{{ mssg }}</p>
-            <input class="text-black border-2 border-black p-5 block font-semibold text-sm" placeholder="Enter username here" style="border-radius: 20px; border-color: #B6B6B6; width: 80%; margin-left: 10.5%; letter-spacing: 1.5px; font-family: Inter;;" type="text" v-model="username" required>  
+            <p class="text-red-600 ml-16 mt-2">{{ mssg }}</p>
+            <input class="text-black border-2 border-black p-5 block font-semibold text-sm mt-5" placeholder="Enter username here" style="border-radius: 20px; border-color: #B6B6B6; width: 80%; margin-left: 10.5%; letter-spacing: 1.5px; font-family: Inter;;" type="text" v-model="username" required>
             <button class="text-white border p-4 font-semibold text-lg tracking-widest" style="background-color: #E87500; border-radius: 20px; width: 65%; margin-left: 17%; margin-top: 5%; font-family: Inter;">Set Username</button> 
         </form>
     </div>
@@ -14,24 +14,39 @@
 </template>
 
 <script setup lang="ts">
+import {userStore} from "~/stores/user";
+
+const props = defineProps({
+  isChangingUsername: {type: Boolean}
+})
 const username = ref("")
 const mssg = ref("")
 const handleSubmit = async () => {
-    if(username.value.length >= 3 && username.value.length <= 15){
+    console.log(props.isChangingUsername)
+
+  async function $fetch(request: string, opts: { method: string; body: { username: any } }) {
+    return "";
+  }
+
+  if(username.value.length >= 3 && username.value.length <= 15){
         const req:string = await $fetch('api/user', {
-            method: 'post',
+            method: props.isChangingUsername ? 'put' : 'post',
             body: {
                 username: username.value
             }
         })
         if(parseInt(req) == 200){
+            const store = userStore()
+            store.set(username.value)
+            console.log(store.name)
+            console.log("there")
             emitClose()
             reloadNuxtApp()
         } else{
             mssg.value = "Username already exists"
         }
     } else {
-        mssg.value = "Usernae has to be between 3 and 15 characters"
+        mssg.value = "Username has to be between 3 and 15 characters"
     }
 }
 const emit = defineEmits(['closeLogIn'])
