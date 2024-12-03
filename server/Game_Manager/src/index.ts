@@ -77,6 +77,9 @@ const gameCycle = setInterval( async () => {
                         "accesspassword": CONTROLLER_ACCESS
                     })
                 })
+                
+                //hardcode testing with players and sending to database//
+
                 console.log(players[0]["username"] + " vs " + players[1]["username"])
                 // authorize players in Controller server to send key inputs
                 await fetch(`http://${LOCALHOST}:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/addusers`, {
@@ -149,6 +152,7 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.PLAYING){
         // Check when timer reaches 0
         console.log(`TIMER: ${timer} | ${players[0]["username"]} vs ${players[1]["username"]}`)
+        timer--;
         if(timer == 0){
             game_state = GAME_STATE.RESETTING
         }
@@ -189,29 +193,31 @@ const gameCycle = setInterval( async () => {
 
        const [player1, player2]  = await prisma.$transaction([
         prisma.player.findFirst({
-            where: {user_id: players[1]["user_id"]}
+            where: {user_id: players[0]["user_id"]}
         }),
         prisma.player.findFirst({
-            where: {user_id: players[2]["user_id"]}
+            where: {user_id: players[1]["user_id"]}
         })
         ]) 
 
         // changes database values based on which player wins
         if(score1 > score2){
+            let ratio1 = (player1 as PlayerType).losses ? ((player1 as PlayerType).wins + 1) / ((player1 as PlayerType).losses) : ++(player1 as PlayerType).wins
+
             await prisma.$transaction([
                 prisma.player.update({
-                    where: {user_id: players[1]["user_id"]},
+                    where: {user_id: players[0]["user_id"]},
                     data: {
                         wins: {increment: 1},
                         games: {increment: 1},
-                        ratio: ((player1 as PlayerType).wins + 1) / (player1 as PlayerType).losses,
+                        ratio: ratio1,
                         goals: {increment: score1}
                     }
                     
                 }),
 
                 prisma.player.update({
-                    where: {user_id: players[2]["user_id"]},
+                    where: {user_id: players[1]["user_id"]},
                     data: {
                         losses: {increment: 1},
                         games: {increment: 1},
@@ -224,9 +230,10 @@ const gameCycle = setInterval( async () => {
             ])
         }
         else{
+            let ratio2 = (player2 as PlayerType).losses ? ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses) : ++(player2 as PlayerType).wins
             await prisma.$transaction([
                 prisma.player.update({
-                    where: {user_id: players[1]["user_id"]},
+                    where: {user_id: players[0]["user_id"]},
                     data: {
                         losses: {increment: 1},
                         games: {increment: 1},
@@ -238,11 +245,11 @@ const gameCycle = setInterval( async () => {
                 }),
 
                 prisma.player.update({
-                    where: {user_id: players[2]["user_id"]},
+                    where: {user_id: players[1]["user_id"]},
                     data: {
                         wins: {increment: 1},
                         games: {increment: 1},
-                        ratio: ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses),
+                        ratio: ratio2,
                         goals: {increment: score2}
 
                     }
@@ -253,7 +260,7 @@ const gameCycle = setInterval( async () => {
         
 
         players.splice(0, 2)
-        robots_ready = false
+        robots_ready = true
         timer = 0
         score1 = 0
         score2 = 0
