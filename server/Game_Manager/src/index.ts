@@ -25,19 +25,31 @@ const players: Array<{username: string, user_id: string, ws: any, accepted: bool
 let CONFIRMATION_PASSWORD: string = "sousounofrieren" // "Tearful goodbyes aren’t our style. It’d be embarrassing when we meet again"
 let CONTROLLER_ACCESS: string = "donutvampire" // the initial value does not do anything here
 let timer: number = 0
-const timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
+let timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 const confirmation_timer_duration: number = parseInt(`${process.env.CONFIRMATION_TIMER_DURATION}`) // this is the time given to players to confirm, in seconds
 let score1: number = 0
 let score2: number = 0
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
-let robots_ready: boolean = false
+let robots_ready: boolean = true
+let numPlayers = 1
+
+// Match Settings
+const matchSettings = async () => {
+    const response = await prisma.matchSettings.findFirst({
+        where: {id: 1}
+    });
+    timer_duration = response?.matchLength as unknown as number
+    numPlayers = response?.numPlayers as unknown as number
+
+}
 
 // SECTION: GAME CYCLES
 const gameCycle = setInterval( async () => {
     if(game_state == GAME_STATE.NOT_PLAYING){
         // Check for sufficient users in queue to send confirmation request
+        matchSettings()
         if(queue.length >= 2){
             if(robots_ready){ // robots are ready to play
                 game_state = GAME_STATE.SEND_CONFIRM
@@ -147,6 +159,7 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.PLAYING){
         // Check when timer reaches 0
         console.log(`TIMER: ${timer} | ${players[0]["username"]} vs ${players[1]["username"]}`)
+        timer -= 1
         if(timer == 0){
             game_state = GAME_STATE.RESETTING
         }
@@ -179,7 +192,7 @@ const gameCycle = setInterval( async () => {
             }
         })
         players.splice(0, 2)
-        robots_ready = false
+        robots_ready = true
         timer = 0
         score1 = 0
         score2 = 0
