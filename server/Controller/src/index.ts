@@ -1,4 +1,5 @@
 import express from "express"
+import { PrismaClient } from '@prisma/client'   
 import { WebSocket, WebSocketServer } from "ws"
 import { createServer, IncomingMessage } from "http"
 import jwt from "jsonwebtoken"
@@ -22,6 +23,7 @@ let CONTROLLER_ACCESS: string = ""
 // Temporary queue until Auth0+database is set up
 // ws to close connection on POST /removeuser
 const allowedUsers: Array<{"user_id": string, "playernumber": number, "ws": any}> = []
+const prisma = new PrismaClient();  
 
 const printCurrentUsers = () => {
     let output = ""
@@ -164,30 +166,44 @@ app.post("/shutdownrobot", (request, response) => {
     // If admin, send shutdown command to Raspberry Pi
     ws_raspberry.send(JSON.stringify({
         "type": "ADMIN_INPUT",
-        "payload": {
-            "type": "ROBOT_SHUTDOWN",
-        }
+        "payload": "ROBOT_SHUTDOWN"
     }))
-    response.status(200).send("Robot shutdown command sent!");
+
+    response.status(200).json({message: "Robot shutdown command sent!"});
 });
 
-app.post("/editMatchSettings", (request, response) => {
+app.post("/editMatchSettings", async (request, response) => {
     const role = request.headers.role;
     const { numPlayers, matchTime } = request.body;
 
+    // Ensure that the user is an admin
     if (role !== "admin") {
         return response.status(403).json({ message: "Unauthorized" });
     }
 
-    ws_raspberry.send(JSON.stringify({
-        "type": "ADMIN_INPUT",
-        "payload": {
-            "numPlayers": `${numPlayers}`,
-            "matchTime": `${matchTime}`,
-        }
-    }))
+    try {
+        // Upsert the matchSettings record
+        const updatedSettings = await prisma.matchSettings.upsert({
+            where: { id: 1 },
+            update: {
+                numPlayers: numPlayers,
+                matchLength: matchTime,
+            },
+            create: {
+                id: 1,
+                numPlayers: numPlayers,
+                matchLength: matchTime,
+            },
+        });
 
-    response.status(200).json({ message: "Match settings updated successfully."});
+        return response.status(200).json({
+            message: "Match settings updated successfully.",
+            data: updatedSettings,
+        });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: "Failed to update match settings."});
+    }
 });
 
 

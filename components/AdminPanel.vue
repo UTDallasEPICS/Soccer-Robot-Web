@@ -99,7 +99,7 @@ const shutdown = async () => {
   const role = user.role;
 
   console.log('Sending request to the backend');
-  const response = await fetch('http://localhost:3001/admin/shutdownrobot', {
+  const response = await fetch('http://localhost:3001/shutdownrobot', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

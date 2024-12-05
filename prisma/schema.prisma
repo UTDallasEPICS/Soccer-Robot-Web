@@ -31,3 +31,11 @@ model PlayersInMatches {
   matchID Int
   @@id([playerID, matchID])
 }
+
+model MatchSettings {
+  id          Int    @id @default(1)
+  numPlayers  Int
+  matchLength Int
+  
+  @@unique([id])
+}
