@@ -30,8 +30,8 @@ let timer: number = 0
 const timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 const confirmation_timer_duration: number = parseInt(`${process.env.CONFIRMATION_TIMER_DURATION}`) // this is the time given to players to confirm, in seconds
-let score1: number = 10
-let score2: number = 2
+let score1: number = 5
+let score2: number = 5
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
 let robots_ready: boolean = true
@@ -166,6 +166,9 @@ const gameCycle = setInterval( async () => {
                                     {"user_id": players[1]["user_id"]}] })
         })
 
+
+        
+
         // store played match in database
         await prisma.match.create({
             data: {
@@ -212,8 +215,7 @@ const gameCycle = setInterval( async () => {
                         games: {increment: 1},
                         ratio: ratio1,
                         goals: {increment: score1}
-                    }
-                    
+                    }    
                 }),
 
                 prisma.player.update({
@@ -229,7 +231,7 @@ const gameCycle = setInterval( async () => {
                 })
             ])
         }
-        else{
+        else if(score2 > score1){
             let ratio2 = (player2 as PlayerType).losses ? ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses) : ++(player2 as PlayerType).wins
             await prisma.$transaction([
                 prisma.player.update({
@@ -257,8 +259,27 @@ const gameCycle = setInterval( async () => {
                 })
             ])
         }
-        
+        else{
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[0]["user_id"]},
+                    data: {
+                        games: {increment: 1},
+                        goals: {increment: score1}
+                    }
+                }),
 
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        games: {increment: 1},
+                        goals: {increment: score2}
+                    }
+                })
+            ])
+            
+        }
+    
         players.splice(0, 2)
         robots_ready = true
         timer = 0
