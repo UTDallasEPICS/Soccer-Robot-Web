@@ -15,6 +15,8 @@ export default defineNuxtConfig({
       PORT_SSE_GM: '',
     }
   },
+
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss']
+  modules: ['@nuxtjs/tailwindcss'],
+  compatibilityDate: '2024-10-03'
 })

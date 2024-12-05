@@ -1,3 +1,4 @@
+
 datasource db {
   provider = "sqlite"
   url      = env("PRISMA_DB_URL")
@@ -15,10 +16,11 @@ model Player {
   user_id  String @id
   username String @unique
   email    String @unique
-  wins     Int    @default(0)
-  goals    Int    @default(0)
-  games    Int    @default(0)
-
+  wins     Int @default(0)
+  goals    Int @default(0)
+  games    Int @default(0)
+  losses   Int @default(0)
+  ratio    Float? 
   matches PlayersInMatches[]
 }
 
