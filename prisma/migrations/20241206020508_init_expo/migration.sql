@@ -2,7 +2,12 @@
 CREATE TABLE "Player" (
     "user_id" TEXT NOT NULL PRIMARY KEY,
     "username" TEXT NOT NULL,
-    "email" TEXT NOT NULL
+    "email" TEXT NOT NULL,
+    "wins" INTEGER NOT NULL DEFAULT 0,
+    "goals" INTEGER NOT NULL DEFAULT 0,
+    "games" INTEGER NOT NULL DEFAULT 0,
+    "losses" INTEGER NOT NULL DEFAULT 0,
+    "ratio" REAL
 );
 
 -- CreateTable

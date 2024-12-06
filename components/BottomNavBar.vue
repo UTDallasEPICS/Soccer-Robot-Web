@@ -13,8 +13,11 @@
         </div>
         <div>
             <p class="cursor-pointer hover:text-gray-300 transition font-semibold duration-300 text-white text-xl" @click="openLeaderboard"> Leaderboard </p>
+        </div>
+        <div>
             <p class="cursor-pointer hover:text-gray-300 transition font-semibold duration-300 text-white text-xl" v-if="isLoggedIn" @click="openChangeUsername"> Change Username </p>
         </div>
+
     </div>
   
     <AboutUsOverlay v-if="showAboutUs" @closeAboutUsOverlay="closeAboutUs"></AboutUsOverlay>

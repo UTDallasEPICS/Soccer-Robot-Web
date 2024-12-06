@@ -34,7 +34,7 @@ let score1: number = 10
 let score2: number = 2
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
-let robots_ready: boolean = true
+let robots_ready: boolean = false
 
 // SECTION: GAME CYCLES
 const gameCycle = setInterval( async () => {
@@ -152,7 +152,7 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.PLAYING){
         // Check when timer reaches 0
         console.log(`TIMER: ${timer} | ${players[0]["username"]} vs ${players[1]["username"]}`)
-        timer--;
+        //timer--;
         if(timer == 0){
             game_state = GAME_STATE.RESETTING
         }
@@ -260,10 +260,10 @@ const gameCycle = setInterval( async () => {
         
 
         players.splice(0, 2)
-        robots_ready = true
+        robots_ready = false
         timer = 0
         score1 = 0
-        score2 = 0
+        score2 = 3
         game_state = GAME_STATE.NOT_PLAYING
     }
 }, 1000)
