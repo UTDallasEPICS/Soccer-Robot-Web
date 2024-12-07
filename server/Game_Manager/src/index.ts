@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken"
 import fs from "fs"
 import { PrismaClient } from "@prisma/client"
 import { nanoid } from "nanoid"
+import type {Player as PlayerType} from "@prisma/client" 
+
 
 const prisma = new PrismaClient()
 
@@ -28,10 +30,11 @@ let timer: number = 0
 let timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 const confirmation_timer_duration: number = parseInt(`${process.env.CONFIRMATION_TIMER_DURATION}`) // this is the time given to players to confirm, in seconds
-let score1: number = 0
-let score2: number = 0
+let score1: number = 8
+let score2: number = 5
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
+let robots_ready: boolean = true
 let robots_ready: boolean = true
 let numPlayers = 1
 
@@ -87,6 +90,9 @@ const gameCycle = setInterval( async () => {
                         "accesspassword": CONTROLLER_ACCESS
                     })
                 })
+                
+                //hardcode testing with players and sending to database//
+
                 console.log(players[0]["username"] + " vs " + players[1]["username"])
                 // authorize players in Controller server to send key inputs
                 await fetch(`http://${LOCALHOST}:${PORT_EXPRESS_CONTROLLER_GAMEMANAGER}/addusers`, {
@@ -159,7 +165,7 @@ const gameCycle = setInterval( async () => {
     else if(game_state == GAME_STATE.PLAYING){
         // Check when timer reaches 0
         console.log(`TIMER: ${timer} | ${players[0]["username"]} vs ${players[1]["username"]}`)
-        timer -= 1
+        timer--;
         if(timer == 0){
             game_state = GAME_STATE.RESETTING
         }
@@ -172,25 +178,121 @@ const gameCycle = setInterval( async () => {
             body: JSON.stringify({ "users": [  {"user_id": players[0]["user_id"]}, 
                                     {"user_id": players[1]["user_id"]}] })
         })
+
+
+        
+
         // store played match in database
         await prisma.match.create({
             data: {
                 datetime: new Date(),
+
+
                 // these are the players who played and their scores
                 players: {
                     create: [
                         {
                             playerID: players[0]["user_id"],
                             playerScore: score1
+                            
                         },
                         {
                             playerID: players[1]["user_id"],
                             playerScore: score2
                         }
                     ]
+
+
                 }
             }
         })
+
+       const [player1, player2]  = await prisma.$transaction([
+        prisma.player.findFirst({
+            where: {user_id: players[0]["user_id"]}
+        }),
+        prisma.player.findFirst({
+            where: {user_id: players[1]["user_id"]}
+        })
+        ]) 
+
+        // changes database values based on which player wins
+        if(score1 > score2){
+            let ratio1 = (player1 as PlayerType).losses ? ((player1 as PlayerType).wins + 1) / ((player1 as PlayerType).losses) : ++(player1 as PlayerType).wins
+
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[0]["user_id"]},
+                    data: {
+                        wins: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ratio1,
+                        goals: {increment: score1}
+                    }    
+                }),
+
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        losses: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ((player2 as PlayerType).wins) / ((player2 as PlayerType).losses + 1),
+                        goals: {increment: score2}
+
+                    }
+                    
+                })
+            ])
+        }
+        else if(score2 > score1){
+            let ratio2 = (player2 as PlayerType).losses ? ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses) : ++(player2 as PlayerType).wins
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[0]["user_id"]},
+                    data: {
+                        losses: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ((player1 as PlayerType).wins) / ((player1 as PlayerType).losses + 1),
+                        goals: {increment: score1}
+
+                    }
+                    
+                }),
+
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        wins: {increment: 1},
+                        games: {increment: 1},
+                        ratio: ratio2,
+                        goals: {increment: score2}
+
+                    }
+                    
+                })
+            ])
+        }
+        else{
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[0]["user_id"]},
+                    data: {
+                        games: {increment: 1},
+                        goals: {increment: score1}
+                    }
+                }),
+
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        games: {increment: 1},
+                        goals: {increment: score2}
+                    }
+                })
+            ])
+            
+        }
+    
         players.splice(0, 2)
         robots_ready = true
         timer = 0

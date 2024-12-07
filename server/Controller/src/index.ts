@@ -40,7 +40,8 @@ ws_raspberry.onopen = (event) => {
 }
 
 ws_raspberry.onerror = (error) => {
-    console.log("WS_RASPBERRY error: " + error)
+    console.log("WS_RASPBERRY error: " + error.message)
+    console.error(error)
 }
 ws_raspberry.onclose = (event) => {
     console.log("WS_RASPBERRY closed")
