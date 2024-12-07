@@ -1,10 +1,17 @@
 import express from "express"
+import { PrismaClient } from '@prisma/client'   
 import { WebSocket, WebSocketServer } from "ws"
 import { createServer, IncomingMessage } from "http"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 import dotenv from "dotenv"
+import cors from 'cors';
 
+
+interface JwtPayloadWithRole extends jwt.JwtPayload {
+    role?: string;
+  }
+  
 // Environment variables
 dotenv.config({ path: "./.env" })
 const LOCALHOST: string = process.env.LOCALHOST ?? "localhost"
@@ -16,6 +23,7 @@ let CONTROLLER_ACCESS: string = ""
 // Temporary queue until Auth0+database is set up
 // ws to close connection on POST /removeuser
 const allowedUsers: Array<{"user_id": string, "playernumber": number, "ws": any}> = []
+const prisma = new PrismaClient();  
 
 const printCurrentUsers = () => {
     let output = ""
@@ -43,6 +51,18 @@ ws_raspberry.onclose = (event) => {
 // THIS IS A PRIVATE PORT
 const app = express()
 app.use(express.json())
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: '*'
+}));
+
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, role');
+    res.sendStatus(200);
+});
 
 app.listen(PORT_SERVER, () => {
     console.log(`Express Server is running on http://${LOCALHOST}:${PORT_SERVER}`);
@@ -135,6 +155,58 @@ app.post("/removeusers", (request, response) => {
     })
     response.status(status).end()
 })
+
+app.post("/shutdownrobot", (request, response) => {
+    const role = request.headers.role
+
+    // Check if the user has an 'admin' role
+    if (role !== "admin") {
+        return response.status(403).json({ message: "Unauthorized" });
+    }
+    
+    // If admin, send shutdown command to Raspberry Pi
+    ws_raspberry.send(JSON.stringify({
+        "type": "ADMIN_INPUT",
+        "payload": "ROBOT_SHUTDOWN"
+    }))
+
+    response.status(200).json({message: "Robot shutdown command sent!"});
+});
+
+app.post("/editMatchSettings", async (request, response) => {
+    const role = request.headers.role;
+    const { numPlayers, matchTime } = request.body;
+
+    // Ensure that the user is an admin
+    if (role !== "admin") {
+        return response.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+        // Upsert the matchSettings record
+        const updatedSettings = await prisma.matchSettings.upsert({
+            where: { id: 1 },
+            update: {
+                numPlayers: parseInt(numPlayers),
+                matchLength: matchTime,
+            },
+            create: {
+                id: 1,
+                numPlayers: parseInt(numPlayers),
+                matchLength: matchTime,
+            },
+        });
+
+        return response.status(200).json({
+            message: "Match settings updated successfully.",
+            data: updatedSettings,
+        });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: "Failed to update match settings."});
+    }
+});
+
 
 // SECTION: WEBSOCKET SERVER: CLIENT -> CONTROLLER
 const server = createServer()

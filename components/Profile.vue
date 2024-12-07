@@ -18,8 +18,9 @@
 </template>
 
 <script setup lang="ts">
-    const getUser = useCookie('sruser')
-    let username = getUser.value
+    import type { Player } from '@prisma/client'
+    const getUser = useCookie<Partial<Player>>('sruser')
+    let username = getUser.value?.username as string
 
     const logout = async () => { 
         window.location.href='api/logout'
