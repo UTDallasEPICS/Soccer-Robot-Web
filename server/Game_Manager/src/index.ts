@@ -27,19 +27,32 @@ const players: Array<{username: string, user_id: string, ws: any, accepted: bool
 let CONFIRMATION_PASSWORD: string = "sousounofrieren" // "Tearful goodbyes aren’t our style. It’d be embarrassing when we meet again"
 let CONTROLLER_ACCESS: string = "donutvampire" // the initial value does not do anything here
 let timer: number = 0
-const timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
+let timer_duration: number = parseInt(`${process.env.TIMER_DURATION}`) // this is the initial timer duration, in seconds
 let confirmation_timer: number = 0
 const confirmation_timer_duration: number = parseInt(`${process.env.CONFIRMATION_TIMER_DURATION}`) // this is the time given to players to confirm, in seconds
-let score1: number = 10
-let score2: number = 2
+let score1: number = 8
+let score2: number = 5
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
-let robots_ready: boolean = false
+
+let robots_ready: boolean = true
+let numPlayers: number = 1
+
+// Match Settings
+const matchSettings = async () => {
+    const response = await prisma.matchSettings.findFirst({
+        where: {id: 1}
+    });
+    timer_duration = response?.matchLength as unknown as number ? response?.matchLength as unknown as number : parseInt(`${process.env.TIMER_DURATION}`)
+    numPlayers = response?.numPlayers as unknown as number
+
+}
 
 // SECTION: GAME CYCLES
 const gameCycle = setInterval( async () => {
     if(game_state == GAME_STATE.NOT_PLAYING){
         // Check for sufficient users in queue to send confirmation request
+        await matchSettings()
         if(queue.length >= 2){
             if(robots_ready){ // robots are ready to play
                 game_state = GAME_STATE.SEND_CONFIRM
@@ -166,6 +179,9 @@ const gameCycle = setInterval( async () => {
                                     {"user_id": players[1]["user_id"]}] })
         })
 
+
+        
+
         // store played match in database
         await prisma.match.create({
             data: {
@@ -212,8 +228,7 @@ const gameCycle = setInterval( async () => {
                         games: {increment: 1},
                         ratio: ratio1,
                         goals: {increment: score1}
-                    }
-                    
+                    }    
                 }),
 
                 prisma.player.update({
@@ -229,7 +244,7 @@ const gameCycle = setInterval( async () => {
                 })
             ])
         }
-        else{
+        else if(score2 > score1){
             let ratio2 = (player2 as PlayerType).losses ? ((player2 as PlayerType).wins + 1) / ((player2 as PlayerType).losses) : ++(player2 as PlayerType).wins
             await prisma.$transaction([
                 prisma.player.update({
@@ -257,13 +272,32 @@ const gameCycle = setInterval( async () => {
                 })
             ])
         }
-        
+        else{
+            await prisma.$transaction([
+                prisma.player.update({
+                    where: {user_id: players[0]["user_id"]},
+                    data: {
+                        games: {increment: 1},
+                        goals: {increment: score1}
+                    }
+                }),
 
+                prisma.player.update({
+                    where: {user_id: players[1]["user_id"]},
+                    data: {
+                        games: {increment: 1},
+                        goals: {increment: score2}
+                    }
+                })
+            ])
+            
+        }
+    
         players.splice(0, 2)
         robots_ready = false
         timer = 0
-        score1 = 0
-        score2 = 3
+        score1 = score1 - 3
+        score2 = score2
         game_state = GAME_STATE.NOT_PLAYING
     }
 }, 1000)

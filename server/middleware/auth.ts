@@ -17,10 +17,14 @@ export default defineEventHandler(async event => {
         const player = await prisma.player.findUnique({
           where:{
             user_id: id
-          }
+          }, 
+          select: {
+            username: true,
+            role: true
+          } 
         })
         if(player){
-          setCookie(event, 'sruser', player.username)
+          setCookie(event, 'sruser', JSON.stringify(player))
         } else {
           setCookie(event, 'sruser', '')
         }
@@ -35,6 +39,3 @@ export default defineEventHandler(async event => {
     setCookie(event, 'srtoken', '')
   }
 })
-
-
-
