@@ -35,15 +35,14 @@ let score2: number = 5
 enum GAME_STATE { NOT_PLAYING, SEND_CONFIRM, PLAYING, RESETTING }
 let game_state: GAME_STATE = GAME_STATE.NOT_PLAYING
 let robots_ready: boolean = true
-let robots_ready: boolean = true
-let numPlayers = 1
+let numPlayers: number = 1
 
 // Match Settings
 const matchSettings = async () => {
     const response = await prisma.matchSettings.findFirst({
         where: {id: 1}
     });
-    timer_duration = response?.matchLength as unknown as number
+    timer_duration = response?.matchLength as unknown as number ? response?.matchLength as unknown as number : parseInt(`${process.env.TIMER_DURATION}`)
     numPlayers = response?.numPlayers as unknown as number
 
 }
@@ -52,7 +51,7 @@ const matchSettings = async () => {
 const gameCycle = setInterval( async () => {
     if(game_state == GAME_STATE.NOT_PLAYING){
         // Check for sufficient users in queue to send confirmation request
-        matchSettings()
+        await matchSettings()
         if(queue.length >= 2){
             if(robots_ready){ // robots are ready to play
                 game_state = GAME_STATE.SEND_CONFIRM
@@ -296,8 +295,8 @@ const gameCycle = setInterval( async () => {
         players.splice(0, 2)
         robots_ready = true
         timer = 0
-        score1 = 0
-        score2 = 0
+        score1 = score1 - 3
+        score2 = score2
         game_state = GAME_STATE.NOT_PLAYING
     }
 }, 1000)

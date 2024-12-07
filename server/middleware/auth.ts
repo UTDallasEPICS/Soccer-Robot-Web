@@ -5,31 +5,26 @@ import { PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
-interface JwtPayloadWithRole extends jwt.JwtPayload {
-  role?: string;
-}
-
 export default defineEventHandler(async event => {
   event.context.prisma = prisma
   const srtoken = getCookie(event, 'srtoken') || ''
-  if (srtoken) {
+  if(srtoken){
     try {
-      const claims: JwtPayloadWithRole | string = jwt.verify(srtoken, fs.readFileSync(process.cwd() + '/cert-dev.pem')) as JwtPayloadWithRole
-      if (typeof claims === 'object' && 'nonce' in claims) {
+      const claims:any = jwt.verify(srtoken, fs.readFileSync(process.cwd() + '/cert-dev.pem'))
+      if(claims instanceof Object && "nonce" in claims){
         event.context.claims = claims
         const id = claims['sub']
         const player = await prisma.player.findUnique({
-          where: {
+          where:{
             user_id: id
-          },
+          }, 
           select: {
             username: true,
             role: true
-          }
+          } 
         })
-        
-        if (player) {
-          setCookie(event, 'sruser', JSON.stringify({ username: player.username, role: player.role }))
+        if(player){
+          setCookie(event, 'sruser', JSON.stringify(player))
         } else {
           setCookie(event, 'sruser', '')
         }

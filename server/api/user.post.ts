@@ -16,10 +16,14 @@ export default defineEventHandler(async (event) => {
         user_id: claims['sub'],
         username,
         email: claims['email']
+      },
+      select: {
+        username: true,
+        role: true
       } 
     })
     msg = 200
-    setCookie(event, 'sruser', username)
+    setCookie(event, 'sruser', JSON.stringify(player))
   } else {
     msg = 403
   }

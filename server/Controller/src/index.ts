@@ -187,12 +187,12 @@ app.post("/editMatchSettings", async (request, response) => {
         const updatedSettings = await prisma.matchSettings.upsert({
             where: { id: 1 },
             update: {
-                numPlayers: numPlayers,
+                numPlayers: parseInt(numPlayers),
                 matchLength: matchTime,
             },
             create: {
                 id: 1,
-                numPlayers: numPlayers,
+                numPlayers: parseInt(numPlayers),
                 matchLength: matchTime,
             },
         });
