@@ -49,12 +49,3 @@ model MatchSettings {
   
   @@unique([id])
 }
-
-model TestUML {
-  id          Int    @id @default(1)
-  numPlayers  Int
-  matchLength Int
-  
-  @@unique([id])
-}
-
