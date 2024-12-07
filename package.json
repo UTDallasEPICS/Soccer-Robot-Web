@@ -10,7 +10,7 @@
     "postinstall": "nuxt prepare",
     "bootgame": "tsx server/Game_Manager/src/index.ts",
     "bootcontrol": "tsx server/Controller/src/index.ts",
-    "bootpi": "tsx server/Raspberry/src/index.ts"
+    "bootpi": "tsx server/Rasberri/src/index.ts"
 
   },
   "dependencies": {
