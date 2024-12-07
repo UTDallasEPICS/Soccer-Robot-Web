@@ -1,8 +1,7 @@
-# Sample workflow for building and deploying a Next.js site to GitHub Pages
+# workflow for building and deploying a Nuxt.js site to GitHub Pages
 #
-# To get started with Next.js see: https://nextjs.org/docs/getting-started
 #
-name: Test Next.js build
+name: Test Nuxt.js build
 
 on:
   # Runs on pushes targeting the default branch
@@ -18,10 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  POSTGRES_PORT: 5432
-  POSTGRES_PASSWORD: postgres
-  PRISMA_DB_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
-
+  PRISMA_DB_URL: "file:dev.db"
 jobs:
   # Build job
   build:
@@ -48,11 +44,11 @@ jobs:
         run: npm ci
       - name: Create Prisma Generator
         run: |
-          if [ grep -q '^model*' ${{ github.workspace }}/prisma/schema.prisma ]; then
-            npm prisma generate
+          if ! [ grep -q '^model*' ${{ github.workspace }}/prisma/schema.prisma ]; then
+            npx prisma generate
           else
             echo "No models defined in 'prisma.schema'. Prisma Client NOT generated"
           fi
           exit 0
-      - name: Build with Next.js
+      - name: Build with Nuxt.js
         run: npm run build
