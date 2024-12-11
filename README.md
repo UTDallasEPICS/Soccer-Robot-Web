@@ -53,6 +53,7 @@ Our project not only caters to the entertainment needs of our users but also ser
 - The website shall display the game queue
 - The website shall display additional information such as About Us, How to Play, and Help
 - The user shall be able to login and logout through Auth0
+- The user shall be able to select a new username
 - Newly registered users shall be able choose a unique username (2-15 characters, alphanumeric except for dashes ```-``` and underscores ```_```)
 
 ### Queue System
@@ -143,7 +144,13 @@ Get the signing certificate from the Auth0 application and create a root-level c
 
 ### Initialize .env variables
 
-Look at **.env.example** for reference. Create an .env file in the root directory filled out with needed information.
+#### Option #1
+
+- Copy your mentor's .env file into the root directory.
+
+#### Option #2
+
+- Create an .env file in the root directory. Fill with necessary information based on **.env.example**.
 
 #### Some notes
 
