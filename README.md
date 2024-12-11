@@ -146,11 +146,12 @@ Get the signing certificate from the Auth0 application and create a root-level c
 
 #### Option #1
 
-- Copy your mentor's .env file into the root directory.
+- Copy your mentor's .env file into the root directory
 
 #### Option #2
 
-- Create an .env file in the root directory. Fill with necessary information based on **.env.example**.
+- Create an .env file in the root directory
+- Fill with necessary information based on **.env.example**
 
 #### Some notes
 
