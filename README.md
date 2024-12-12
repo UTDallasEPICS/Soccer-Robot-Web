@@ -68,6 +68,15 @@ Our project not only caters to the entertainment needs of our users but also ser
   - In a confirmation popup, the player shall be able to click “Decline” within 10 seconds to refuse to join the match and leave the queue
   - In a confirmation popup, the system shall kick a player from the queue if the player does not click either “Accept” or “Decline” within 10 seconds
 
+### Admin Panel
+
+- User with an admin privileges can shutdown the robot.
+- User with admin privileges can also change the match settings such as match length, num of players in a match.
+- The Admin panel will be pn the secondary navbar adn when clicked we will get a popuo
+  - The popup has two buttons that says shutdown and match settings
+    - When users clicks on shutdown it verifies the user previleges and if admin it sends signal to the raspberry pi.
+    - when clicked on match settings we wll get a drop down that asks for number of players and match length. The data is saved in the database when clicked save.
+
 ### Soccer Robot Game and Sending Signals
 
 - The system shall be able to check whether the robots are in a "ready" state (as communicated by the Engineering team)
