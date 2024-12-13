@@ -44,6 +44,11 @@ Our project not only caters to the entertainment needs of our users but also ser
 - join/leave/confirm queue
 - can play the game (wasd inputs)
 
+#### Admin 
+
+- The Admin shall be able to change match settings
+- The Admin shhall be able shutdown the Robot
+
 ## Functional Requirements
 
 ### Website
@@ -77,6 +82,14 @@ Our project not only caters to the entertainment needs of our users but also ser
     - When users clicks on shutdown it verifies the user previleges and if admin it sends signal to the raspberry pi.
     - when clicked on match settings we wll get a drop down that asks for number of players and match length. The data is saved in the database when clicked save.
 
+### Leaderboard
+
+- The leaderboard shall show the columns of the players wins, losses, total goals scored, total games played, and win/loss ratio
+- The leaderbooard should appear in modal
+- The leaderboard shall be shortable by the columns representing: goals, wins, losses, win/loss ratio, and games played of each player
+- The leaderboard shall show the top 5 players
+- The leaderboard data shall update after every game
+
 ### Soccer Robot Game and Sending Signals
 
 - The system shall be able to check whether the robots are in a "ready" state (as communicated by the Engineering team)
@@ -94,6 +107,7 @@ Our project not only caters to the entertainment needs of our users but also ser
 
 - Auth0 for authentication
 - Twitch for live-streaming soccer arena
+- Janus WebRTC Plugin for improved live streaming
 
 ## Tech Stack
 
@@ -211,6 +225,11 @@ npx prisma studio
 npm run bootcontrol -- --host
 npm run bootgame -- --host
 npm run dev -- --host
+```
+
+### For development without Soccer Robot Hardware's Rasberry Pi ###
+```bash
+npm run bootpi -- --host
 ```
 
 #### Custom package.json scripts
